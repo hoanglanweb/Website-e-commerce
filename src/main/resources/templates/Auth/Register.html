@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng ký tài khoản | Electronics Store</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body class="bg-zinc-50 text-zinc-950 antialiased min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-zinc-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <a th:href="@{/}" class="text-lg font-extrabold tracking-tight uppercase">
+                ELECTRONICS<span class="text-blue-600">.STORE</span>
+            </a>
+            <a th:href="@{/}" class="text-xs font-semibold uppercase tracking-wider text-zinc-600 hover:text-zinc-950 flex items-center gap-2 transition-colors">
+                <i class="fa-solid fa-arrow-left"></i> Trang chủ
+            </a>
+        </div>
+    </header>
+
+    <!-- Main Form -->
+    <main class="flex-1 flex items-center justify-center px-4 py-12">
+        <div class="w-full max-w-md bg-white border border-zinc-200 p-8 shadow-xs">
+            <div class="mb-6">
+                <span class="text-[10px] font-bold uppercase tracking-[0.2em] text-blue-600">Thành viên mới</span>
+                <h1 class="text-2xl font-bold tracking-tight text-zinc-950 mt-1">Đăng ký tài khoản</h1>
+                <p class="text-xs text-zinc-500 mt-1">Tạo tài khoản để mua sắm nhanh chóng và quản lý bảo hành.</p>
+            </div>
+
+            <!-- Thông báo lỗi validation -->
+            <div th:if="${registerError != null}"
+                 class="mb-4 p-3.5 bg-red-50 border-l-4 border-red-600 text-xs font-medium text-red-700 flex items-center gap-2">
+                <i class="fa-solid fa-circle-exclamation text-red-600"></i>
+                <span th:text="${registerError}"></span>
+            </div>
+
+            <form th:action="@{/register}" th:object="${registerForm}" method="post" class="space-y-4">
+                <div>
+                    <label for="fullName" class="block text-xs font-bold uppercase tracking-wider text-zinc-700 mb-1.5">
+                        Họ và tên <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" id="fullName" th:field="*{fullName}" required
+                           placeholder="Nguyễn Văn A"
+                           class="w-full h-11 px-3.5 text-sm border border-zinc-300 focus:border-zinc-950 focus:outline-none transition-colors">
+                </div>
+
+                <div>
+                    <label for="email" class="block text-xs font-bold uppercase tracking-wider text-zinc-700 mb-1.5">
+                        Email <span class="text-red-500">*</span>
+                    </label>
+                    <input type="email" id="email" th:field="*{email}" required
+                           placeholder="name@example.com"
+                           class="w-full h-11 px-3.5 text-sm border border-zinc-300 focus:border-zinc-950 focus:outline-none transition-colors">
+                </div>
+
+                <div>
+                    <label for="phone" class="block text-xs font-bold uppercase tracking-wider text-zinc-700 mb-1.5">
+                        Số điện thoại
+                    </label>
+                    <input type="tel" id="phone" th:field="*{phone}"
+                           placeholder="0901 234 567"
+                           class="w-full h-11 px-3.5 text-sm border border-zinc-300 focus:border-zinc-950 focus:outline-none transition-colors">
+                </div>
+
+                <div>
+                    <label for="password" class="block text-xs font-bold uppercase tracking-wider text-zinc-700 mb-1.5">
+                        Mật khẩu <span class="text-red-500">*</span>
+                    </label>
+                    <input type="password" id="password" th:field="*{password}" required minlength="6"
+                           placeholder="Tối thiểu 6 ký tự"
+                           class="w-full h-11 px-3.5 text-sm border border-zinc-300 focus:border-zinc-950 focus:outline-none transition-colors">
+                </div>
+
+                <div>
+                    <label for="confirmPassword" class="block text-xs font-bold uppercase tracking-wider text-zinc-700 mb-1.5">
+                        Xác nhận mật khẩu <span class="text-red-500">*</span>
+                    </label>
+                    <input type="password" id="confirmPassword" th:field="*{confirmPassword}" required minlength="6"
+                           placeholder="Nhập lại mật khẩu"
+                           class="w-full h-11 px-3.5 text-sm border border-zinc-300 focus:border-zinc-950 focus:outline-none transition-colors">
+                </div>
+
+                <button type="submit"
+                        class="w-full h-11 mt-2 bg-zinc-950 hover:bg-blue-600 text-white text-xs font-bold uppercase tracking-wider transition-colors">
+                    Tạo tài khoản
+                </button>
+            </form>
+
+            <div class="mt-6 pt-5 border-t border-zinc-200 text-center text-xs text-zinc-600">
+                Đã có tài khoản?
+                <a th:href="@{/login}" class="font-bold text-blue-600 hover:underline ml-1">
+                    Đăng nhập ngay
+                </a>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

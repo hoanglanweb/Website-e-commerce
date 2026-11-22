@@ -1,0 +1,21 @@
+{
+  "scripts": {
+    "build:css": "tailwindcss -i ./src/main/resources/static/css/tailwind.css -o ./src/main/resources/static/css/app.css --minify",
+    "watch:css": "tailwindcss -i ./src/main/resources/static/css/tailwind.css -o ./src/main/resources/static/css/app.css --watch"
+  },
+  "dependencies": {
+    "@tailwindcss/vite": "^4.3.5"
+  },
+  "devDependencies": {
+    "@fontsource-variable/instrument-sans": "^5.2.6",
+    "@fontsource/instrument-serif": "^5.2.6",
+    "@tailwindcss/cli": "^4.3.5",
+    "tailwindcss": "^4.3.5"
+  },
+  "name": "electronics_store",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "keywords": [],
+  "type": "commonjs"
+}

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng nhập | Electronics Store</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body class="bg-zinc-50 text-zinc-950 antialiased min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-zinc-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <a th:href="@{/}" class="text-lg font-extrabold tracking-tight uppercase">
+                ELECTRONICS<span class="text-blue-600">.STORE</span>
+            </a>
+            <a th:href="@{/}" class="text-xs font-semibold uppercase tracking-wider text-zinc-600 hover:text-zinc-950 flex items-center gap-2 transition-colors">
+                <i class="fa-solid fa-arrow-left"></i> Trang chủ
+            </a>
+        </div>
+    </header>
+
+    <!-- Main Form -->
+    <main class="flex-1 flex items-center justify-center px-4 py-12">
+        <div class="w-full max-w-md bg-white border border-zinc-200 p-8 shadow-xs">
+            <div class="mb-6">
+                <span class="text-[10px] font-bold uppercase tracking-[0.2em] text-blue-600">Tài khoản thành viên</span>
+                <h1 class="text-2xl font-bold tracking-tight text-zinc-950 mt-1">Đăng nhập</h1>
+                <p class="text-xs text-zinc-500 mt-1">Đăng nhập để theo dõi đơn hàng và nhận ưu đãi thành viên.</p>
+            </div>
+
+            <!-- Thông báo đăng ký thành công -->
+            <div th:if="${registerSuccess != null}"
+                 class="mb-4 p-3.5 bg-emerald-50 border-l-4 border-emerald-600 text-xs font-medium text-emerald-800 flex items-center gap-2">
+                <i class="fa-solid fa-circle-check text-emerald-600"></i>
+                <span th:text="${registerSuccess}"></span>
+            </div>
+
+            <!-- Thông báo lỗi đăng nhập -->
+            <div th:if="${param.error}"
+                 class="mb-4 p-3.5 bg-red-50 border-l-4 border-red-600 text-xs font-medium text-red-700 flex items-center gap-2">
+                <i class="fa-solid fa-circle-exclamation text-red-600"></i>
+                <span>Email hoặc mật khẩu không chính xác.</span>
+            </div>
+
+            <!-- Thông báo đăng xuất -->
+            <div th:if="${param.logout}"
+                 class="mb-4 p-3.5 bg-blue-50 border-l-4 border-blue-600 text-xs font-medium text-blue-800 flex items-center gap-2">
+                <i class="fa-solid fa-circle-info text-blue-600"></i>
+                <span>Bạn đã đăng xuất khỏi hệ thống.</span>
+            </div>
+
+            <form th:action="@{/login}" method="post" class="space-y-4">
+                <div>
+                    <label for="email" class="block text-xs font-bold uppercase tracking-wider text-zinc-700 mb-1.5">
+                        Email
+                    </label>
+                    <input type="email" id="email" name="email" required autofocus
+                           placeholder="name@example.com"
+                           class="w-full h-11 px-3.5 text-sm border border-zinc-300 focus:border-zinc-950 focus:outline-none transition-colors">
+                </div>
+
+                <div>
+                    <label for="password" class="block text-xs font-bold uppercase tracking-wider text-zinc-700 mb-1.5">
+                        Mật khẩu
+                    </label>
+                    <input type="password" id="password" name="password" required
+                           placeholder="••••••••"
+                           class="w-full h-11 px-3.5 text-sm border border-zinc-300 focus:border-zinc-950 focus:outline-none transition-colors">
+                </div>
+
+                <button type="submit"
+                        class="w-full h-11 mt-2 bg-zinc-950 hover:bg-blue-600 text-white text-xs font-bold uppercase tracking-wider transition-colors">
+                    Đăng nhập
+                </button>
+            </form>
+
+            <div class="mt-6 pt-5 border-t border-zinc-200 text-center text-xs text-zinc-600">
+                Chưa có tài khoản?
+                <a th:href="@{/register}" class="font-bold text-blue-600 hover:underline ml-1">
+                    Đăng ký ngay
+                </a>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

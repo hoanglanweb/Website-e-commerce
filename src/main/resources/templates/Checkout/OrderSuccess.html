@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đặt hàng thành công | Electronics Store</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body class="bg-zinc-50 text-zinc-950 antialiased min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-zinc-200 h-16 flex items-center justify-between px-4 sm:px-6 lg:px-8">
+        <a th:href="@{/}" class="text-lg font-extrabold tracking-tight uppercase">
+            ELECTRONICS<span class="text-blue-600">.STORE</span>
+        </a>
+        <a th:href="@{/}"
+           class="text-xs font-semibold uppercase tracking-wider text-zinc-600 hover:text-zinc-950 flex items-center gap-2 transition-colors">
+            <i class="fa-solid fa-arrow-left"></i>
+            <span>Về trang chủ</span>
+        </a>
+    </header>
+
+    <!-- Nội dung xác nhận đặt hàng -->
+    <main class="flex-1 max-w-2xl w-full mx-auto px-4 sm:px-6 py-12 flex items-center justify-center">
+        <div class="w-full bg-white border border-zinc-200 p-6 sm:p-8 space-y-6">
+            <div class="text-center space-y-2 pb-6 border-b border-zinc-200">
+                <div class="w-14 h-14 mx-auto rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-2xl">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
+                <h1 class="text-2xl font-bold tracking-tight text-zinc-950">
+                    Đặt hàng thành công!
+                </h1>
+                <p class="text-xs text-zinc-500 max-w-md mx-auto">
+                    Cảm ơn bạn đã mua sắm tại Electronics Store. Đơn hàng của bạn đã được ghi nhận và đang chờ xử lý.
+                </p>
+            </div>
+
+            <div class="space-y-3 text-xs text-zinc-700">
+                <div class="flex items-center justify-between py-1.5 border-b border-zinc-100">
+                    <span class="text-zinc-500 font-semibold">Mã đơn hàng</span>
+                    <span class="font-mono font-bold text-zinc-950"
+                          th:text="${order != null and order.orderCode != null ? order.orderCode : '#ORD-NEW'}">#ORD-NEW</span>
+                </div>
+
+                <div th:if="${order != null and order.recipientName != null}"
+                     class="flex items-center justify-between py-1.5 border-b border-zinc-100">
+                    <span class="text-zinc-500 font-semibold">Người nhận</span>
+                    <span class="font-semibold text-zinc-900" th:text="${order.recipientName}"></span>
+                </div>
+
+                <div th:if="${order != null and order.recipientPhone != null}"
+                     class="flex items-center justify-between py-1.5 border-b border-zinc-100">
+                    <span class="text-zinc-500 font-semibold">Số điện thoại</span>
+                    <span class="font-semibold text-zinc-900 tabular-nums" th:text="${order.recipientPhone}"></span>
+                </div>
+
+                <div th:if="${order != null and order.shippingAddress != null}"
+                     class="flex items-start justify-between gap-4 py-1.5 border-b border-zinc-100">
+                    <span class="text-zinc-500 font-semibold flex-shrink-0">Địa chỉ giao hàng</span>
+                    <span class="font-semibold text-zinc-900 text-right" th:text="${order.shippingAddress}"></span>
+                </div>
+
+                <div th:if="${order != null and order.totalAmount != null}"
+                     class="flex items-center justify-between pt-2">
+                    <span class="text-sm font-bold text-zinc-950">Tổng thanh toán</span>
+                    <span class="text-xl font-extrabold text-blue-600 tabular-nums"
+                          th:text="${#numbers.formatDecimal(order.totalAmount, 0, 'POINT', 0, 'COMMA') + 'đ'}">0đ</span>
+                </div>
+            </div>
+
+            <div class="pt-4 border-t border-zinc-200 flex flex-col sm:flex-row items-center justify-end gap-3 text-xs">
+                <a th:href="@{/}"
+                   class="w-full sm:w-auto h-10 px-5 border border-zinc-300 hover:border-zinc-950 text-zinc-700 hover:text-zinc-950 font-bold uppercase tracking-wider inline-flex items-center justify-center transition-colors">
+                    Tiếp tục mua sắm
+                </a>
+                <a th:href="@{/cart}"
+                   class="w-full sm:w-auto h-10 px-5 bg-zinc-950 hover:bg-blue-600 text-white font-bold uppercase tracking-wider inline-flex items-center justify-center transition-colors">
+                    Xem giỏ hàng
+                </a>
+            </div>
+        </div>
+    </main>
+
+</body>
+</html>

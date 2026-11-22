@@ -1,0 +1,1285 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" th:if="${_csrf != null}" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:if="${_csrf != null}" th:content="${_csrf.headerName}">
+    <title th:text="${product.productName} + ' | Electronics Store'">Chi tiết sản phẩm</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        .rich-content ul {
+            list-style-type: disc;
+            padding-left: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .rich-content h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #09090b;
+            margin-top: 1.25rem;
+            margin-bottom: 0.5rem;
+        }
+        .rich-content p {
+            margin-bottom: 0.75rem;
+        }
+    </style>
+</head>
+<body class="bg-zinc-50 text-zinc-950 antialiased">
+
+    <!-- Header -->
+    <header class="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-zinc-200/80 supports-[backdrop-filter]:bg-white/70">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-6">
+            
+            <!-- 1. Logo & Danh mục -->
+            <div class="flex items-center gap-10">
+                <a th:href="@{/}" href="#" class="flex items-center gap-2.5 group focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-600">
+                    <div class="w-9 h-9 bg-zinc-950 flex items-center justify-center text-white group-hover:bg-blue-600 transition-colors duration-300">
+                        <i class="fa-solid fa-laptop text-[15px]"></i>
+                    </div>
+                    <span class="text-[17px] font-extrabold tracking-tight text-zinc-950">
+                        Electronics
+                    </span>
+                </a>
+
+                <!-- Menu danh mục với Dropdown (Desktop) -->
+                <nav class="hidden lg:flex items-center gap-1 text-[13px] font-medium text-zinc-600">
+                    
+                 <!-- 1. Danh mục Laptop (Có Dropdown) -->
+                    <div class="relative group">
+                        <button type="button" class="flex items-center gap-1.5 px-3 py-2 hover:text-zinc-950 hover:bg-zinc-100 transition-colors">
+                            <span>Laptop</span>
+                            <i class="fa-solid fa-chevron-down text-[10px] text-zinc-400 group-hover:rotate-180 transition-transform"></i>
+                        </button>
+                        <!-- Dropdown Panel -->
+                        <div class="absolute top-full left-0 w-56 bg-white border border-zinc-200 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 py-2">
+                            <a th:href="@{/(category='Gaming')} + '#products'"
+                            class="flex items-center justify-between px-4 py-2.5 hover:bg-zinc-50 hover:text-blue-600 transition-colors">
+                                <span>Laptop Gaming</span>
+                                <span class="text-[10px] bg-zinc-100 text-zinc-600 px-1.5 py-0.5">MSI, Asus</span>
+                            </a>
+                            <a th:href="@{/(category='Văn Phòng')} + '#products'"
+                            class="flex items-center justify-between px-4 py-2.5 hover:bg-zinc-50 hover:text-blue-600 transition-colors">
+                                <span>Laptop Văn Phòng</span>
+                                <span class="text-[10px] bg-zinc-100 text-zinc-600 px-1.5 py-0.5">Acer, Lenovo</span>
+                            </a>
+                            <a th:href="@{/(category='Đồ Họa')} + '#products'"
+                            class="flex items-center justify-between px-4 py-2.5 hover:bg-zinc-50 hover:text-blue-600 transition-colors">
+                                <span>Laptop Đồ Họa</span>
+                                <span class="text-[10px] bg-zinc-100 text-zinc-600 px-1.5 py-0.5">Pro</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- 2. Thương hiệu (Có Dropdown hiển thị nhanh 4 hãng MSI, ACER, ASUS, LENOVO) -->
+                    <div class="relative group">
+                        <button type="button" class="flex items-center gap-1.5 px-3 py-2 hover:text-zinc-950 hover:bg-zinc-100 transition-colors">
+                            <span>Thương Hiệu</span>
+                            <i class="fa-solid fa-chevron-down text-[10px] text-zinc-400 group-hover:rotate-180 transition-transform"></i>
+                        </button>
+                        <!-- Dropdown Panel -->
+                        <div class="absolute top-full left-0 w-48 bg-white border border-zinc-200 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 py-2">
+                            <a th:each="b : ${ {'MSI', 'ACER', 'ASUS', 'LENOVO'} }"
+                            th:href="@{/(brand=${b}, category=${selectedCategory != null and selectedCategory != 'ALL' ? selectedCategory : null})} + '#products'"
+                            th:text="${b}"
+                            th:classappend="${selectedBrand == b} ? 'text-blue-600 bg-zinc-50' : ''"
+                            class="block px-4 py-2 hover:bg-zinc-50 hover:text-blue-600 font-semibold transition-colors">
+                                MSI
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- 3. Phụ kiện -->
+                    <a href="#products" class="px-3 py-2 hover:text-zinc-950 hover:bg-zinc-100 transition-colors">Phụ Kiện</a>
+
+                </nav>
+            </div>
+
+            <!-- 2. Ô Tìm Kiếm (Trung tâm) -->
+             <form th:action="@{/}" method="get" class="relative flex items-center w-full max-w-md" id="detailSearchForm">
+                <input type="text"
+                    id="searchInput"
+                    name="keyword"
+                    th:value="${keyword}"
+                    autocomplete="off"
+                    placeholder="Tìm laptop, RTX 4050, i7..."
+                    class="w-full h-10 pl-3.5 pr-10 text-sm border border-zinc-300 focus:border-zinc-950 focus:outline-none">
+                <button type="submit"
+                        class="h-10 px-3.5 bg-zinc-950 hover:bg-blue-600 text-white text-xs font-semibold transition-colors">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </button>
+
+                <!-- Khung dropdown gợi ý (nếu dùng live search) -->
+                <div id="searchSuggestions"
+                    class="hidden absolute left-0 right-0 top-full mt-1 bg-white border border-zinc-200 shadow-lg z-50">
+                </div>
+            </form>
+
+            <!-- 3. Giỏ hàng & Đăng nhập (Góc phải) -->
+            <div class="flex items-center gap-2">
+                <!-- Nút Giỏ hàng khi ĐÃ đăng nhập -->
+                <a th:if="${currentUserFullName != null}"
+                th:href="@{/cart}"
+                class="relative w-10 h-10 flex items-center justify-center hover:bg-zinc-100 text-zinc-700 transition-colors focus-visible:outline-2 focus-visible:outline-blue-600"
+                aria-label="Giỏ hàng">
+                    <i class="fa-solid fa-cart-shopping text-[15px]"></i>
+                    <span th:text="${cartCount != null ? cartCount : 0}"
+                        class="absolute top-1.5 right-1.5 bg-blue-600 text-white text-[10px] font-bold min-w-4 h-4 px-1 flex items-center justify-center tabular-nums ring-2 ring-white">
+                        0
+                    </span>
+                </a>
+
+                <!-- Nút Giỏ hàng khi CHƯA đăng nhập -> Mở Modal thông báo -->
+                <button th:if="${currentUserFullName == null}"
+                        type="button"
+                        onclick="openLoginRequiredModal()"
+                        class="relative w-10 h-10 flex items-center justify-center hover:bg-zinc-100 text-zinc-700 transition-colors focus-visible:outline-2 focus-visible:outline-blue-600"
+                        aria-label="Giỏ hàng">
+                    <i class="fa-solid fa-cart-shopping text-[15px]"></i>
+                    <span class="absolute top-1.5 right-1.5 bg-blue-600 text-white text-[10px] font-bold min-w-4 h-4 px-1 flex items-center justify-center tabular-nums ring-2 ring-white">
+                        0
+                    </span>
+                </button>
+
+                <!-- Khi CHƯA đăng nhập -->
+                <div th:if="${currentUserFullName == null}" class="flex items-center gap-3">
+                    <a th:href="@{/login}"
+                    class="text-xs font-semibold uppercase tracking-wider text-zinc-700 hover:text-blue-600 transition-colors">
+                        Đăng nhập
+                    </a>
+                    <span class="text-zinc-300">|</span>
+                    <a th:href="@{/register}"
+                    class="text-xs font-semibold uppercase tracking-wider text-zinc-700 hover:text-blue-600 transition-colors">
+                        Đăng ký
+                    </a>
+                </div>
+
+                <!-- Khi ĐÃ đăng nhập -->
+                <div th:if="${currentUserFullName != null}" class="flex items-center gap-3">
+                    <span class="text-xs font-semibold text-zinc-800 flex items-center gap-1.5">
+                        <i class="fa-regular fa-user text-blue-600"></i>
+                        <span th:text="${currentUserFullName}">Tên người dùng</span>
+                    </span>
+                    <form th:action="@{/logout}" method="post" class="inline">
+                        <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                        <button type="submit"
+                                class="text-xs font-semibold text-red-600 hover:underline ml-1">
+                            Đăng xuất
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </header>
+
+   <!-- Main -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"
+          th:with="stockQty=${product.stockQuantity != null ? product.stockQuantity : 0}, outOfStock=${stockQty le 0}">
+        <!-- Breadcrumb -->
+        <nav class="flex flex-wrap items-center gap-2 text-xs text-zinc-500 mb-6">
+            <a th:href="@{/}" class="hover:text-zinc-950">Trang chủ</a>
+            <span>/</span>
+            <span th:text="${product.categoryName}" class="text-zinc-700 font-medium">Laptop</span>
+            <span>/</span>
+            <span th:text="${product.brandName}" class="text-zinc-700 font-medium">Thương hiệu</span>
+            <span>/</span>
+            <span th:text="${product.productCode}" class="text-zinc-950 font-semibold">Mã SP</span>
+        </nav>
+
+        <!-- Khung chi tiết sản phẩm 2 cột -->
+        <div class="bg-white border border-zinc-200 p-6 lg:p-10 grid grid-cols-1 lg:grid-cols-12 gap-10">
+
+            <!-- Cột trái: Ảnh chính + 4 ảnh phụ (7 cột) -->
+            <div class="lg:col-span-7 flex flex-col gap-4">
+                <div class="bg-zinc-100 border border-zinc-200 aspect-[4/3] flex items-center justify-center overflow-hidden p-6">
+                    <img id="mainProductImage"
+                         th:src="${!#lists.isEmpty(product.images) ? product.images[0].imageUrl : '/images/default-laptop.png'}"
+                         th:alt="${product.productName}"
+                         referrerpolicy="no-referrer"
+                         onerror="this.onerror=null; this.src='/images/default-laptop.png';"
+                         class="w-full h-full object-contain transition-all duration-300">
+                </div>
+
+                <!-- Thanh Thumbnails -->
+                <div th:if="${#lists.size(product.images) gt 1}" class="flex items-center gap-3 overflow-x-auto pb-1">
+                    <button type="button"
+                            th:each="img, stat : ${product.images}"
+                            th:data-src="${img.imageUrl}"
+                            th:title="${img.altText}"
+                            onclick="changeMainImage(this)"
+                            th:classappend="${stat.index == 0} ? 'border-zinc-950 ring-1 ring-zinc-950' : 'border-zinc-200'"
+                            class="thumb-btn w-20 h-16 bg-zinc-100 border p-1.5 flex-shrink-0 hover:border-zinc-950 transition-all">
+                        <img th:src="${img.imageUrl}"
+                             th:alt="${img.altText}"
+                             referrerpolicy="no-referrer"
+                             onerror="this.onerror=null; this.src='/images/default-laptop.png';"
+                             class="w-full h-full object-contain">
+                    </button>
+                </div>
+
+                <!-- Mô tả ngắn -->
+                <div th:if="${product.shortDescription != null and !product.shortDescription.isEmpty()}"
+                     class="mt-2 bg-blue-50/70 border-l-4 border-blue-600 p-4">
+                    <p th:text="${product.shortDescription}"
+                       class="text-sm font-medium text-zinc-800 leading-relaxed">
+                    </p>
+                </div>
+            </div>
+
+            <!-- Cột phải: Thông tin giá, tồn kho, phiên bản & Nút mua (5 cột) -->
+            <div class="lg:col-span-5 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between gap-2 mb-2">
+                        <span th:text="${product.brandName}"
+                              class="bg-zinc-950 text-white text-[10px] font-bold px-2.5 py-1 uppercase tracking-[0.15em]">
+                            BRAND
+                        </span>
+                        <span class="text-xs text-zinc-500 font-mono">
+                            SKU: <strong th:text="${product.selectedSku}" class="text-zinc-800">SKU-001</strong>
+                        </span>
+                    </div>
+
+                    <h1 th:text="${product.productName}"
+                        class="text-2xl lg:text-3xl font-bold tracking-tight text-zinc-950 leading-snug mt-2">
+                        Tên sản phẩm
+                    </h1>
+
+                    <!-- Giá bán -->
+                    <div class="mt-5 pb-5 border-b border-zinc-200 flex items-baseline gap-3">
+                        <span class="text-3xl font-extrabold text-blue-600 tabular-nums tracking-tight"
+                              th:text="${product.displayPrice != null ? #numbers.formatDecimal(product.displayPrice, 0, 'POINT', 0, 'COMMA') + 'đ' : 'Liên hệ'}">
+                            17.490.000đ
+                        </span>
+                        <span th:if="${product.basePrice != null and product.displayPrice != null and product.basePrice.compareTo(product.displayPrice) gt 0}"
+                              th:text="${#numbers.formatDecimal(product.basePrice, 0, 'POINT', 0, 'COMMA') + 'đ'}"
+                              class="text-sm text-zinc-400 line-through tabular-nums">
+                        </span>
+                    </div>
+
+                    <!-- Trạng thái & số lượng tồn kho -->
+                    <div class="mt-4 mb-4 flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-2 text-xs">
+                            <span th:if="${stockQty gt 3}"
+                                  class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                <span>Còn hàng</span>
+                            </span>
+
+                            <span th:if="${stockQty gt 0 and stockQty le 3}"
+                                  class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-amber-50 text-amber-700 border border-amber-200 font-semibold">
+                                <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                                <span>Sắp hết hàng</span>
+                            </span>
+
+                            <span th:if="${stockQty le 0}"
+                                  class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-rose-50 text-rose-700 border border-rose-200 font-semibold">
+                                <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                                <span>Hết hàng</span>
+                            </span>
+                        </div>
+
+                        <div class="text-xs text-zinc-600 tabular-nums">
+                            Tồn kho: <strong class="font-mono text-zinc-950" th:text="${stockQty}">0</strong> máy
+                        </div>
+                    </div>
+
+                    <!-- Gợi ý các cấu hình khác CÙNG PHÂN KHÚC -->
+                    <div th:if="${#lists.size(product.variants) le 1 and !#lists.isEmpty(product.recommendedProducts)}"
+                         th:with="p30=${new java.math.BigDecimal('30000000')},
+                                p70=${new java.math.BigDecimal('70000000')},
+                                hasHigher=${product.recommendedProducts[0].price != null and product.displayPrice != null and product.recommendedProducts[0].price.compareTo(product.displayPrice) gt 0},
+                                hasLower=${product.recommendedProducts[#lists.size(product.recommendedProducts) - 1].price != null and product.displayPrice != null and product.recommendedProducts[#lists.size(product.recommendedProducts) - 1].price.compareTo(product.displayPrice) lt 0},
+                                segmentLabel=${product.displayPrice != null ? (product.displayPrice.compareTo(p30) lt 0 ? 'Phân khúc tầm trung' : (product.displayPrice.compareTo(p70) lt 0 ? 'Phân khúc cao cấp' : 'Phân khúc siêu cao cấp')) : 'Cùng phân khúc'}"
+
+                        <div class="flex items-center justify-between gap-2 mb-3">
+                            <p th:if="${!hasHigher and hasLower}"
+                               class="text-xs font-bold uppercase tracking-wider text-zinc-700 flex items-center gap-1.5">
+                                <i class="fa-solid fa-layer-group text-zinc-600"></i>
+                                <span th:text="'Gợi ý cấu hình thấp hơn • ' + ${segmentLabel}">Gợi ý cấu hình thấp hơn</span>
+                            </p>
+
+                            <p th:if="${hasHigher and !hasLower}"
+                               class="text-xs font-bold uppercase tracking-wider text-zinc-700 flex items-center gap-1.5">
+                                <i class="fa-solid fa-arrow-trend-up text-blue-600"></i>
+                                <span th:text="'Gợi ý nâng cấp cấu hình cao hơn • ' + ${segmentLabel}">Gợi ý nâng cấp</span>
+                            </p>
+
+                            <p th:if="${hasHigher and hasLower}"
+                               class="text-xs font-bold uppercase tracking-wider text-zinc-700 flex items-center gap-1.5">
+                                <i class="fa-solid fa-sliders text-blue-600"></i>
+                                <span th:text="'Tùy chọn khác • ' + ${segmentLabel}">Tùy chọn cấu hình khác</span>
+                            </p>
+
+                            <p th:if="${!hasHigher and !hasLower}"
+                               class="text-xs font-bold uppercase tracking-wider text-zinc-700 flex items-center gap-1.5">
+                                <i class="fa-solid fa-laptop text-blue-600"></i>
+                                <span th:text="'Gợi ý • ' + ${segmentLabel}">Gợi ý cùng phân khúc</span>
+                            </p>
+
+                            <span th:text="${segmentLabel}"
+                                  th:classappend="${product.displayPrice != null and product.displayPrice.compareTo(p70) ge 0 ? 'bg-amber-100 text-amber-800 font-bold' : (product.displayPrice != null and product.displayPrice.compareTo(p30) ge 0 ? 'bg-blue-100 text-blue-700 font-bold' : 'bg-zinc-200 text-zinc-700 font-semibold')}"
+                                  class="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded flex-shrink-0">
+                                Phân khúc cao cấp
+                            </span>
+                        </div>
+
+                        <div class="grid grid-cols-1 gap-2.5">
+                            <a th:each="rec : ${product.recommendedProducts}"
+                               th:href="@{/products/{slug}(slug=${rec.slug})}"
+                               class="group p-3 rounded-lg border border-zinc-200 bg-zinc-50/50 hover:border-blue-600 hover:bg-blue-50/30 transition-all flex items-center justify-between gap-3">
+                                <div class="flex items-center gap-3 min-w-0">
+                                    <img th:src="${rec.imageUrl != null and !#strings.isEmpty(rec.imageUrl) ? rec.imageUrl : '/images/default-laptop.png'}"
+                                         th:alt="${rec.productName}"
+                                         referrerpolicy="no-referrer"
+                                         onerror="this.onerror=null; this.src='/images/default-laptop.png';"
+                                         class="w-12 h-10 object-contain bg-white border border-zinc-200 rounded p-1 flex-shrink-0">
+                                    <div class="min-w-0">
+                                        <div class="flex items-center gap-1.5">
+                                            <span th:if="${rec.price != null and product.displayPrice != null and rec.price.compareTo(product.displayPrice) gt 0}"
+                                                  class="text-[10px] font-bold uppercase px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded flex-shrink-0">
+                                                Nâng cấp
+                                            </span>
+                                            <span th:if="${rec.price != null and product.displayPrice != null and rec.price.compareTo(product.displayPrice) lt 0}"
+                                                  class="text-[10px] font-bold uppercase px-1.5 py-0.5 bg-zinc-200 text-zinc-700 rounded flex-shrink-0">
+                                                Thấp hơn
+                                            </span>
+                                            <span th:if="${rec.price != null and product.displayPrice != null and rec.price.compareTo(product.displayPrice) == 0}"
+                                                  class="text-[10px] font-bold uppercase px-1.5 py-0.5 bg-emerald-100 text-emerald-700 rounded flex-shrink-0">
+                                                Đồng giá
+                                            </span>
+
+                                            <span th:text="${rec.productName}"
+                                                  class="text-xs font-bold text-zinc-900 group-hover:text-blue-600 truncate">
+                                                Tên máy cùng phân khúc
+                                            </span>
+                                        </div>
+
+                                        <p th:if="${rec.configurationSummary != null and !#strings.isEmpty(rec.configurationSummary)}"
+                                           th:text="${rec.configurationSummary}"
+                                           class="text-[11px] text-zinc-500 mt-1 line-clamp-1">
+                                            Cấu hình tóm tắt
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="text-right flex-shrink-0">
+                                    <div class="text-xs font-extrabold text-blue-600 tabular-nums"
+                                         th:text="${rec.price != null ? #numbers.formatDecimal(rec.price, 0, 'POINT', 0, 'COMMA') + 'đ' : 'Liên hệ'}">
+                                    </div>
+
+                                    <div th:if="${rec.price != null and product.displayPrice != null and rec.price.compareTo(product.displayPrice) gt 0}"
+                                         class="text-[10px] font-medium text-emerald-600 mt-0.5 tabular-nums"
+                                         th:text="'+' + ${#numbers.formatDecimal(rec.price.subtract(product.displayPrice), 0, 'POINT', 0, 'COMMA')} + 'đ'">
+                                    </div>
+                                    <div th:if="${rec.price != null and product.displayPrice != null and rec.price.compareTo(product.displayPrice) lt 0}"
+                                         class="text-[10px] font-medium text-zinc-500 mt-0.5 tabular-nums"
+                                         th:text="'-' + ${#numbers.formatDecimal(product.displayPrice.subtract(rec.price), 0, 'POINT', 0, 'COMMA')} + 'đ'">
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+
+                         <!-- Nút mua hàng -->
+                        <div class="mt-8 pt-6 border-t border-zinc-200 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full">
+                            <th:block th:unless="${outOfStock}">
+                                <form th:if="${currentUserFullName != null}" th:action="@{/cart/add-form}" method="post" class="flex-1 min-w-0">
+                                    <input type="hidden" name="variantId" th:value="${product.selectedVariantId}">
+                                    <input type="hidden" name="slug" th:value="${product.slug}">
+                                    <input type="hidden" name="quantity" value="1">
+                                    <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                                    <button type="submit"
+                                            class="w-full h-12 px-5 bg-zinc-950 hover:bg-blue-600 text-white text-sm font-semibold transition-colors flex items-center justify-center gap-2 whitespace-nowrap">
+                                        <i class="fa-solid fa-cart-plus shrink-0"></i>
+                                        <span>Thêm vào giỏ hàng</span>
+                                    </button>
+                                </form>
+
+                                <button th:if="${currentUserFullName == null}"
+                                        type="button"
+                                        onclick="openLoginRequiredModal()"
+                                        class="flex-1 h-12 px-5 bg-zinc-950 hover:bg-blue-600 text-white text-sm font-semibold transition-colors flex items-center justify-center gap-2 whitespace-nowrap">
+                                    <i class="fa-solid fa-cart-plus shrink-0"></i>
+                                    <span>Thêm vào giỏ hàng</span>
+                                </button>
+
+                                <form th:if="${currentUserFullName != null}" th:action="@{/cart/buy-now}" method="post" class="w-full sm:w-auto shrink-0">
+                                    <input type="hidden" name="variantId" th:value="${product.selectedVariantId}">
+                                    <input type="hidden" name="quantity" value="1">
+                                    <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                                    <button type="submit"
+                                            class="w-full sm:w-auto h-12 px-6 border border-zinc-950 text-zinc-950 hover:bg-zinc-950 hover:text-white text-sm font-semibold transition-colors flex items-center justify-center whitespace-nowrap">
+                                        Mua ngay
+                                    </button>
+                                </form>
+
+                                <button th:if="${currentUserFullName == null}"
+                                        type="button"
+                                        onclick="openLoginRequiredModal()"
+                                        class="w-full sm:w-auto h-12 px-6 border border-zinc-950 text-zinc-950 hover:bg-zinc-950 hover:text-white text-sm font-semibold transition-colors flex items-center justify-center whitespace-nowrap shrink-0">
+                                    Mua ngay
+                                </button>
+                            </th:block>
+
+                            <div th:if="${outOfStock}" class="w-full">
+                                <button type="button"
+                                        disabled
+                                        class="w-full h-12 px-5 bg-zinc-200 text-zinc-500 border border-zinc-300 text-sm font-semibold cursor-not-allowed flex items-center justify-center gap-2 whitespace-nowrap">
+                                    <i class="fa-solid fa-box-open shrink-0"></i>
+                                    <span>Tạm hết hàng (0 máy)</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+               
+            </div>
+
+            <div th:if="${cartSuccessMessage != null}"
+                 id="cartToast"
+                 class="fixed bottom-5 right-5 z-50 bg-zinc-950 text-white px-5 py-3.5 shadow-lg border border-zinc-800 flex items-center gap-3 text-sm transition-opacity duration-300">
+                <i class="fa-solid fa-circle-check text-emerald-400 text-base"></i>
+                <span th:text="${cartSuccessMessage}" class="font-medium">Đã thêm sản phẩm vào giỏ hàng!</span>
+                <a th:href="@{/cart}" class="ml-2 text-xs font-bold text-blue-400 hover:underline">Xem giỏ</a>
+            </div>
+        </div>
+
+        <!-- Bảng Thông số kỹ thuật 12 dòng chuẩn -->
+        <section th:if="${!#lists.isEmpty(product.highlightSpecs) or !#lists.isEmpty(product.specGroups)}"
+                 class="mt-8 bg-white border border-zinc-200 p-6 lg:p-10">
+
+            <div class="flex items-center justify-between mb-5">
+                <h2 class="text-xl font-bold tracking-tight text-zinc-950">
+                    Thông số kỹ thuật
+                </h2>
+                <button th:if="${!#lists.isEmpty(product.specGroups)}"
+                        type="button"
+                        onclick="openSpecModal()"
+                        class="text-sm font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1.5 transition-colors">
+                    Xem tất cả <i class="fa-solid fa-chevron-right text-xs"></i>
+                </button>
+            </div>
+
+            <div class="border border-zinc-200 rounded-xl overflow-hidden">
+                <table class="w-full text-sm border-collapse">
+                    <tbody class="divide-y divide-zinc-200">
+                        <tr th:each="item : ${product.highlightSpecs}">
+                            <th th:text="${item.name}"
+                                class="w-1/3 sm:w-[32%] bg-zinc-100/80 text-zinc-700 font-medium text-left px-4 py-3.5 align-top border-r border-zinc-200">
+                                Loại card đồ họa
+                            </th>
+                            <td th:text="${item.value}"
+                                class="w-2/3 sm:w-[68%] bg-white text-zinc-900 px-4 py-3.5 align-top whitespace-pre-line leading-relaxed">
+                                NVIDIA GeForce RTX 3050 4GB GDDR6
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Khối 1: Đặc điểm nổi bật & Bài giới thiệu -->
+        <section th:if="${!#lists.isEmpty(product.highlightList) or (product.introduction != null and !product.introduction.isEmpty())}"
+                 class="mt-8 bg-white border border-zinc-200 p-6 lg:p-10 space-y-8">
+
+            <div th:if="${!#lists.isEmpty(product.highlightList)}">
+                <h2 class="text-sm font-bold uppercase tracking-wider text-zinc-950 pb-3 border-b border-zinc-200 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-star text-blue-600 text-xs"></i> Đặc điểm nổi bật
+                </h2>
+                <ul class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <li th:each="hl : ${product.highlightList}"
+                        class="flex items-start gap-2.5 text-sm text-zinc-700 bg-zinc-50 border border-zinc-200/80 p-3.5">
+                        <i class="fa-solid fa-circle-check text-blue-600 mt-1 text-xs flex-shrink-0"></i>
+                        <span th:text="${hl}">Điểm nổi bật</span>
+                    </li>
+                </ul>
+            </div>
+
+            <div th:if="${product.introduction != null and !product.introduction.isEmpty()}">
+                <h2 th:text="${product.introductionTitle != null and !product.introductionTitle.isEmpty() ? product.introductionTitle : 'Giới thiệu chi tiết'}"
+                    class="text-xl font-bold tracking-tight text-zinc-950 pb-3 border-b border-zinc-200 mb-6">
+                </h2>
+
+                <figure th:if="${!#lists.isEmpty(product.extraImages)}"
+                        class="mb-6 bg-gradient-to-b from-zinc-100 to-zinc-50 border border-zinc-200 p-4 sm:p-6 flex flex-col items-center">
+                    <img th:src="${product.extraImages[0].imageUrl}"
+                         th:alt="${product.extraImages[0].altText}"
+                         referrerpolicy="no-referrer"
+                         onerror="this.onerror=null; this.src='/images/default-laptop.png';"
+                         class="max-h-[420px] w-auto object-contain transition-transform duration-300 hover:scale-[1.02]">
+                    <figcaption th:text="${product.extraImages[0].altText}"
+                                class="mt-3 text-xs font-medium text-zinc-500 text-center">
+                        Hình ảnh chi tiết sản phẩm
+                    </figcaption>
+                </figure>
+
+                <div th:utext="${product.introduction}"
+                     class="rich-content text-sm sm:text-[15px] text-zinc-700 leading-relaxed">
+                </div>
+
+                <div th:if="${#lists.size(product.extraImages) gt 1}"
+                     class="mt-8 pt-6 border-t border-zinc-200">
+                    <p class="text-xs font-bold uppercase tracking-wider text-zinc-600 mb-4 flex items-center gap-2">
+                        <i class="fa-regular fa-images text-blue-600"></i> Thư viện hình ảnh thực tế
+                    </p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <figure th:each="img, iter : ${product.extraImages}"
+                                th:if="${iter.index gt 0}"
+                                class="group bg-zinc-50 border border-zinc-200 p-3 flex flex-col justify-between overflow-hidden hover:border-zinc-950 transition-colors">
+                            <div class="aspect-[4/3] flex items-center justify-center overflow-hidden p-2">
+                                <img th:src="${img.imageUrl}"
+                                     th:alt="${img.altText}"
+                                     referrerpolicy="no-referrer"
+                                     onerror="this.onerror=null; this.src='/images/default-laptop.png';"
+                                     class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300">
+                            </div>
+                            <figcaption th:text="${img.altText}"
+                                        class="mt-2 pt-2 border-t border-zinc-200/70 text-[11px] font-medium text-zinc-600 text-center line-clamp-1">
+                            </figcaption>
+                        </figure>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Khối 2: Các mục nội dung từ bảng product_description_sections -->
+        <section th:if="${!#lists.isEmpty(product.sections)}" class="mt-8 space-y-6">
+            <div th:each="sec : ${product.sections}"
+                 class="bg-white border border-zinc-200 p-6 lg:p-10">
+
+                <h3 th:if="${sec.sectionTitle != null and !sec.sectionTitle.isEmpty()}"
+                    th:text="${sec.sectionTitle}"
+                    class="text-base font-bold uppercase tracking-wider text-zinc-950 pb-3 border-b border-zinc-200 mb-5 flex items-center gap-2">
+                    Tiêu đề mục
+                </h3>
+
+                <div th:if="${sec.sectionImage != null and !sec.sectionImage.isEmpty()}"
+                     class="mb-5 bg-zinc-50 border border-zinc-200 p-3 flex justify-center">
+                    <img th:src="${sec.sectionImage}"
+                         th:alt="${sec.sectionTitle != null ? sec.sectionTitle : product.productName}"
+                         referrerpolicy="no-referrer"
+                         class="max-h-[420px] w-auto object-contain">
+                </div>
+
+                <div th:if="${sec.sectionContent != null and !sec.sectionContent.isEmpty()}"
+                     th:utext="${sec.sectionContent}"
+                     class="rich-content text-sm text-zinc-700 leading-relaxed">
+                </div>
+            </div>
+        </section>
+
+        <!-- Khối 3: Hàng gợi ý các dòng máy khác ở cuối trang -->
+        <section th:if="${product.relatedProducts != null and !#lists.isEmpty(product.relatedProducts)}"
+                 class="mt-16 pt-12 border-t border-zinc-200">
+            <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
+                <div>
+                    <span class="text-[11px] font-bold uppercase tracking-widest text-blue-600">
+                        Gợi ý dành cho bạn
+                    </span>
+                    <h2 class="text-xl md:text-2xl font-bold text-zinc-950 tracking-tight mt-1">
+                        Các Dòng Máy Khác Có Thể Bạn Quan Tâm
+                    </h2>
+                </div>
+
+                <a th:href="@{/} + '#products'"
+                   class="text-xs font-bold text-zinc-700 hover:text-blue-600 inline-flex items-center gap-1.5 transition-colors">
+                    <span>Xem tất cả sản phẩm</span>
+                    <i class="fa-solid fa-arrow-right text-[11px]"></i>
+                </a>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                <article th:each="item : ${product.relatedProducts}"
+                         class="group bg-white border border-zinc-200 hover:border-zinc-950 transition-all duration-200 flex flex-col justify-between">
+
+                    <a th:href="@{/products/{slug}(slug=${item.slug}, variantId=${item.variantId})}" class="block">
+                        <div class="relative aspect-[4/3] bg-zinc-50 border-b border-zinc-100 p-5 flex items-center justify-center overflow-hidden">
+                            <span th:text="${item.brandName}"
+                                  class="absolute top-3 left-3 bg-zinc-950 text-white text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 z-10">
+                                MSI
+                            </span>
+
+                            <img th:src="${item.imageUrl != null ? item.imageUrl : '/images/default-laptop.png'}"
+                                 th:alt="${item.altText != null ? item.altText : item.productName}"
+                                 onerror="this.onerror=null; this.src='/images/default-laptop.png';"
+                                 class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300">
+                        </div>
+
+                        <div class="p-4">
+                            <p th:text="${item.categoryName}"
+                               class="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">
+                                Laptop Gaming
+                            </p>
+
+                            <h3 th:text="${item.productName}"
+                                class="text-sm font-bold text-zinc-950 group-hover:text-blue-600 line-clamp-2 mt-1 min-h-[40px] transition-colors">
+                                Tên Laptop
+                            </h3>
+
+                            <p th:text="${item.configurationSummary}"
+                               class="text-xs text-zinc-500 line-clamp-1 mt-2 bg-zinc-50 border border-zinc-100 px-2.5 py-1.5">
+                                i7-13620H / 16GB / RTX 4050
+                            </p>
+                        </div>
+                    </a>
+
+                    <div class="px-4 pb-4 pt-2 border-t border-zinc-100 flex items-center justify-between gap-2">
+                        <div>
+                            <span class="block text-[10px] text-zinc-400 uppercase font-semibold">Giá bán</span>
+                            <span th:text="${#numbers.formatDecimal(item.price, 0, 'POINT', 0, 'COMMA')} + 'đ'"
+                                  class="text-base font-extrabold text-blue-600 tabular-nums">
+                                24.990.000đ
+                            </span>
+                            <span class="block text-[10px] text-zinc-500 tabular-nums mt-0.5"
+                                  th:text="'Tồn kho: ' + ${item.stockQuantity != null ? item.stockQuantity : 0} + ' máy'">
+                                Tồn kho: 5 máy
+                            </span>
+                        </div>
+
+                        <a th:href="@{/products/{slug}(slug=${item.slug}, variantId=${item.variantId})}"
+                           class="h-9 px-3 bg-zinc-950 hover:bg-blue-600 text-white text-xs font-semibold inline-flex items-center justify-center transition-colors shrink-0">
+                            Chi tiết
+                        </a>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <!-- Khối 4: Bình luận & Đánh giá -->
+        <section id="reviews" th:data-authenticated="${currentUserFullName != null}" class="mt-10 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                    <!-- Header & Tổng quan điểm -->
+                    <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-5">
+                        <div>
+                            <h2 class="text-xl font-bold text-slate-900">Đánh giá & hỏi đáp sản phẩm</h2>
+                            <p class="mt-1 text-sm text-slate-500">
+                                Điểm trung bình:
+                                <span class="font-semibold text-amber-600" th:text="${averageRating != null ? averageRating : '0.0'}">0.0</span>/5
+                                (<span th:text="${reviewCount != null ? reviewCount : 0}">0</span> đánh giá)
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Thông báo Flash -->
+                    <div th:if="${reviewSuccess != null}" class="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700" th:text="${reviewSuccess}"></div>
+                    <div th:if="${reviewError != null}" class="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700" th:text="${reviewError}"></div>
+
+                    <!-- Form gửi đánh giá mới -->
+                    <form th:action="@{/products/{slug}/reviews(slug=${product.slug})}" method="post" class="mt-6 space-y-4 rounded-xl bg-slate-50 p-4">
+                        <input type="hidden" name="productId" th:value="${product.productId}" />
+                        <input type="hidden" name="variantId" th:value="${product.selectedVariantId}" />
+                        <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+                        <div class="flex flex-wrap items-center gap-3">
+                            <span class="text-sm font-medium text-slate-700">Đánh giá của bạn:</span>
+                            <div id="starRatingPicker" class="inline-flex items-center gap-1">
+                                <label class="star-btn cursor-pointer p-0.5" data-value="1" title="1 sao">
+                                    <input type="radio" name="rating" value="1" class="sr-only">
+                                    <i class="fa-solid fa-star text-amber-400 text-base"></i>
+                                </label>
+                                <label class="star-btn cursor-pointer p-0.5" data-value="2" title="2 sao">
+                                    <input type="radio" name="rating" value="2" class="sr-only">
+                                    <i class="fa-solid fa-star text-amber-400 text-base"></i>
+                                </label>
+                                <label class="star-btn cursor-pointer p-0.5" data-value="3" title="3 sao">
+                                    <input type="radio" name="rating" value="3" class="sr-only">
+                                    <i class="fa-solid fa-star text-amber-400 text-base"></i>
+                                </label>
+                                <label class="star-btn cursor-pointer p-0.5" data-value="4" title="4 sao">
+                                    <input type="radio" name="rating" value="4" class="sr-only">
+                                    <i class="fa-solid fa-star text-amber-400 text-base"></i>
+                                </label>
+                                <label class="star-btn cursor-pointer p-0.5" data-value="5" title="5 sao">
+                                    <input type="radio" name="rating" value="5" checked class="sr-only">
+                                    <i class="fa-solid fa-star text-amber-400 text-base"></i>
+                                </label>
+                            </div>
+                            <span id="starRatingLabel" class="text-xs font-medium text-amber-700">5 sao — Tuyệt vời</span>
+                        </div>
+
+                        <div>
+                            <textarea
+                                name="comment"
+                                rows="3"
+                                required
+                                placeholder="Chia sẻ trải nghiệm thực tế của bạn về hiệu năng, màn hình, tản nhiệt..."
+                                class="w-full rounded-xl border border-slate-300 bg-white p-3 text-sm text-slate-800 placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none"></textarea>
+                        </div>
+
+                        <div class="flex justify-end">
+                            <button type="submit" class="rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700">
+                                Gửi đánh giá
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Danh sách bình luận gốc + trả lời lồng nhau -->
+                    <div class="mt-8 space-y-6">
+                        <div th:if="${#lists.isEmpty(reviews)}" class="rounded-xl border border-dashed border-slate-200 py-8 text-center text-sm text-slate-500">
+                            Chưa có đánh giá nào cho sản phẩm này. Hãy là người đầu tiên chia sẻ!
+                        </div>
+
+                        <div th:each="rev : ${reviews}" th:if="${rev.parent == null}" class="rounded-xl border border-slate-200 p-4">
+                            <div class="flex items-start justify-between gap-3">
+                                <div>
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        <span class="font-semibold text-slate-900" th:text="${rev.user != null and rev.user.fullName != null ? rev.user.fullName : 'Người dùng'}">Người dùng</span>
+                                        <span class="rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-700" th:text="${rev.rating + ' ★'}">5 ★</span>
+                                        <span class="text-xs text-slate-400" th:if="${rev.createdAt != null}" th:text="${#temporals.format(rev.createdAt, 'dd/MM/yyyy HH:mm')}"></span>
+                                    </div>
+                                    <p class="mt-2 whitespace-pre-line text-sm leading-relaxed text-slate-700" th:text="${rev.comment}"></p>
+                                </div>
+
+                                <form th:if="${#authentication != null and #authentication.isAuthenticated() and rev.user != null and #authentication.name == rev.user.email}"
+                                    th:action="@{/products/{slug}/reviews/{reviewId}/delete(slug=${product.slug}, reviewId=${rev.id})}"
+                                    method="post"
+                                    onsubmit="return confirm('Xóa bình luận này?');">
+                                    <input type="hidden" name="variantId" th:value="${product.selectedVariantId}" />
+                                    <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                                    <button type="submit" class="text-xs font-medium text-rose-600 hover:underline">Xóa</button>
+                                </form>
+                            </div>
+
+                            <div class="mt-3 flex flex-wrap items-center gap-2"
+                                th:with="counts=${reactionCounts != null ? reactionCounts[rev.id] : null}">
+                                <button type="button"
+                                        class="reaction-btn inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-700 transition hover:border-indigo-300 hover:bg-indigo-50"
+                                        th:attr="data-review-id=${rev.id}, data-reaction-type='LIKE'">
+                                    <span>👍 Thích</span>
+                                    <span class="reaction-count font-semibold" th:text="${counts != null and counts['LIKE'] != null ? counts['LIKE'] : 0}">0</span>
+                                </button>
+
+                                <button type="button"
+                                        class="reaction-btn inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-700 transition hover:border-indigo-300 hover:bg-indigo-50"
+                                        th:attr="data-review-id=${rev.id}, data-reaction-type='HELPFUL'">
+                                    <span>💡 Hữu ích</span>
+                                    <span class="reaction-count font-semibold" th:text="${counts != null and counts['HELPFUL'] != null ? counts['HELPFUL'] : 0}">0</span>
+                                </button>
+
+                                <button type="button"
+                                        class="reaction-btn inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-700 transition hover:border-rose-300 hover:bg-rose-50"
+                                        th:attr="data-review-id=${rev.id}, data-reaction-type='LOVE'">
+                                    <span>❤️ Yêu thích</span>
+                                    <span class="reaction-count font-semibold" th:text="${counts != null and counts['LOVE'] != null ? counts['LOVE'] : 0}">0</span>
+                                </button>
+
+                                <button type="button"
+                                        class="reply-toggle-btn ml-1 rounded-lg px-2.5 py-1 text-xs font-medium text-indigo-600 hover:bg-indigo-50"
+                                        th:attr="data-target=${'reply-form-' + rev.id}">
+                                    Trả lời
+                                </button>
+                            </div>
+
+                            <form th:id="${'reply-form-' + rev.id}"
+                                th:action="@{/products/{slug}/reviews/{reviewId}/replies(slug=${product.slug}, reviewId=${rev.id})}"
+                                method="post"
+                                class="reply-form mt-3 hidden space-y-2 rounded-lg border border-slate-200 bg-slate-50 p-3">
+                                <input type="hidden" name="variantId" th:value="${product.selectedVariantId}" />
+                                <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                                <textarea name="comment"
+                                        rows="2"
+                                        required
+                                        placeholder="Viết câu trả lời của bạn..."
+                                        class="w-full rounded-lg border border-slate-300 bg-white p-2 text-xs text-slate-800 focus:border-indigo-500 focus:outline-none"></textarea>
+                                <div class="flex justify-end gap-2">
+                                    <button type="button"
+                                            class="reply-cancel-btn rounded-lg px-3 py-1 text-xs text-slate-600 hover:bg-slate-200"
+                                            th:attr="data-target=${'reply-form-' + rev.id}">
+                                        Hủy
+                                    </button>
+                                    <button type="submit"
+                                            class="rounded-lg bg-indigo-600 px-3.5 py-1 text-xs font-semibold text-white hover:bg-indigo-700">
+                                        Gửi trả lời
+                                    </button>
+                                </div>
+                            </form>
+
+                            <div th:if="${rev.replies != null and !#lists.isEmpty(rev.replies)}"
+                                class="mt-4 space-y-3 border-l-2 border-indigo-100 pl-4">
+                                <div th:each="rep : ${rev.replies}" class="rounded-lg bg-slate-50 p-3">
+                                    <div class="flex items-start justify-between gap-2">
+                                        <div>
+                                            <div class="flex flex-wrap items-center gap-2">
+                                                <span class="text-xs font-semibold text-slate-800"
+                                                    th:text="${rep.user != null and rep.user.fullName != null ? rep.user.fullName : 'Người dùng'}">Người dùng</span>
+                                                <span class="text-[11px] text-slate-400"
+                                                    th:if="${rep.createdAt != null}"
+                                                    th:text="${#temporals.format(rep.createdAt, 'dd/MM/yyyy HH:mm')}"></span>
+                                            </div>
+                                            <p class="mt-1 whitespace-pre-line text-xs leading-relaxed text-slate-700"
+                                            th:text="${rep.comment}"></p>
+                                        </div>
+
+                                        <form th:if="${#authentication != null and #authentication.isAuthenticated() and rep.user != null and #authentication.name == rep.user.email}"
+                                            th:action="@{/products/{slug}/reviews/{reviewId}/delete(slug=${product.slug}, reviewId=${rep.id})}"
+                                            method="post"
+                                            onsubmit="return confirm('Xóa câu trả lời này?');">
+                                            <input type="hidden" name="variantId" th:value="${product.selectedVariantId}" />
+                                            <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                                            <button type="submit" class="text-[11px] font-medium text-rose-600 hover:underline">Xóa</button>
+                                        </form>
+                                    </div>
+
+                                    <div class="mt-2 flex items-center gap-3">
+                                        <button type="button"
+                                                class="reply-to-btn text-[11px] font-medium text-indigo-600 hover:underline"
+                                                th:attr="data-target=${'reply-form-' + rev.id}, data-mention=${rep.user != null and rep.user.fullName != null ? rep.user.fullName : ''}">
+                                            Trả lời
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-zinc-950 text-zinc-400 mt-24">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-8">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-10 mb-14">
+                <div class="lg:col-span-5 lg:pr-12">
+                    <div class="flex items-center gap-2.5 mb-5">
+                        <div class="w-8 h-8 bg-blue-600 flex items-center justify-center text-white text-sm">
+                            <i class="fa-solid fa-laptop"></i>
+                        </div>
+                        <span class="text-[17px] font-extrabold tracking-tight text-white">Electronics</span>
+                    </div>
+                    <p class="text-sm text-zinc-400 leading-relaxed max-w-sm text-pretty">Hệ thống bán lẻ laptop chính hãng hàng đầu Việt Nam chuyên cung cấp các dòng máy Gaming, Văn phòng và Đồ họa cao cấp.</p>
+                </div>
+                <div class="lg:col-span-2">
+                    <h4 class="text-zinc-500 font-semibold mb-5 text-[11px] uppercase tracking-[0.18em]">Danh mục sản phẩm</h4>
+                    <ul class="space-y-3 text-sm text-zinc-300">
+                        <li><a href="#" class="hover:text-white transition-colors">Laptop Gaming</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Laptop Văn phòng</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Laptop Đồ họa</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Phụ kiện Laptop</a></li>
+                    </ul>
+                </div>
+                <div class="lg:col-span-2">
+                    <h4 class="text-zinc-500 font-semibold mb-5 text-[11px] uppercase tracking-[0.18em]">Hỗ trợ khách hàng</h4>
+                    <ul class="space-y-3 text-sm text-zinc-300">
+                        <li><a href="#" class="hover:text-white transition-colors">Chính sách bảo hành</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Hướng dẫn trả góp</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Chính sách đổi trả</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Trung tâm bảo dưỡng</a></li>
+                    </ul>
+                </div>
+                <div class="lg:col-span-3">
+                    <h4 class="text-zinc-500 font-semibold mb-5 text-[11px] uppercase tracking-[0.18em]">Liên hệ</h4>
+                    <p class="text-sm text-zinc-300 mb-3 flex gap-3"><i class="fa-solid fa-location-dot mt-1 w-3 text-blue-500"></i> 123 Đường Công Nghệ, Quận 1, TP.HCM</p>
+                    <p class="text-sm text-zinc-300 mb-3 flex gap-3 tabular-nums"><i class="fa-solid fa-phone mt-1 w-3 text-blue-500"></i> 1900 6789</p>
+                    <p class="text-sm text-zinc-300 flex gap-3"><i class="fa-solid fa-envelope mt-1 w-3 text-blue-500"></i> support@Electronics.vn</p>
+                </div>
+            </div>
+            <div class="border-t border-zinc-800 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-500">
+                <p>© 2026 Electronics. All rights reserved.</p>
+                <div class="flex flex-wrap justify-center gap-x-6 gap-y-2">
+                    <a href="#" class="hover:text-white transition-colors">Quy chế hoạt động</a>
+                    <a href="#" class="hover:text-white transition-colors">Chính sách bảo mật</a>
+                    <a href="#" class="hover:text-white transition-colors">Điều khoản dịch vụ</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Modal Popup khi bấm "Xem tất cả >" -->
+    <div id="specModal"
+         onclick="if(event.target === this) closeSpecModal()"
+         class="fixed inset-0 z-50 hidden bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white border border-zinc-200 rounded-xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-xl">
+            <div class="px-6 py-4 border-b border-zinc-200 flex items-center justify-between">
+                <h3 class="text-base font-bold text-zinc-950">
+                    Thông số kỹ thuật chi tiết - <span th:text="${product.productName}" class="text-blue-600"></span>
+                </h3>
+                <button type="button" onclick="closeSpecModal()" class="text-zinc-500 hover:text-zinc-950 p-1">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div class="p-6 overflow-y-auto space-y-6">
+                <div th:each="grp : ${product.specGroups}" class="border border-zinc-200 rounded-lg overflow-hidden">
+                    <div th:text="${grp.groupName}"
+                         class="bg-zinc-900 text-white text-xs font-bold uppercase tracking-wider px-4 py-2.5">
+                    </div>
+                    <table class="w-full text-sm border-collapse">
+                        <tbody class="divide-y divide-zinc-200">
+                            <tr th:each="item : ${grp.items}">
+                                <th th:text="${item.name}"
+                                    class="w-[36%] bg-zinc-50 text-zinc-700 font-medium text-left px-4 py-3 align-top border-r border-zinc-200">
+                                </th>
+                                <td th:text="${item.value}"
+                                    class="w-[64%] bg-white text-zinc-900 px-4 py-3 align-top whitespace-pre-line leading-relaxed">
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal hỏi đăng nhập khi mua hàng -->
+    <div id="loginRequiredModal"
+        onclick="if(event.target === this) closeLoginRequiredModal()"
+        class="fixed inset-0 z-50 hidden bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white border border-zinc-200 max-w-md w-full p-6 sm:p-7 shadow-xl text-center relative">
+            <button type="button"
+                    onclick="closeLoginRequiredModal()"
+                    class="absolute top-4 right-4 text-zinc-400 hover:text-zinc-950 p-1 transition-colors">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+
+            <div class="w-14 h-14 bg-blue-50 text-blue-600 flex items-center justify-center mx-auto mb-4 text-xl">
+                <i class="fa-solid fa-user-lock"></i>
+            </div>
+
+            <h3 class="text-lg font-bold text-zinc-950">Bạn chưa đăng nhập</h3>
+            <p class="text-sm text-zinc-600 mt-2 leading-relaxed">
+                Vui lòng đăng nhập tài khoản thành viên để thêm sản phẩm vào giỏ hàng và tiến hành đặt mua.
+            </p>
+
+            <div class="mt-6 flex flex-col sm:flex-row gap-3">
+                <a th:href="@{/login}"
+                class="flex-1 h-11 bg-zinc-950 hover:bg-blue-600 text-white text-xs font-bold uppercase tracking-wider transition-colors flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-right-to-bracket"></i> Đăng nhập ngay
+                </a>
+                <a th:href="@{/register}"
+                class="flex-1 h-11 border border-zinc-300 hover:border-zinc-950 text-zinc-900 text-xs font-bold uppercase tracking-wider transition-colors flex items-center justify-center">
+                    Đăng ký tài khoản
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quản lý tương tác giao diện: đổi ảnh gallery, modal, phím Esc, toast giỏ hàng -->
+    <script>
+        function changeMainImage(btn) {
+            if (!btn) return;
+            const newSrc = btn.getAttribute('data-src');
+            const mainImg = document.getElementById('mainProductImage');
+            if (mainImg && newSrc) {
+                mainImg.src = newSrc;
+                const thumbImg = btn.querySelector('img');
+                const nextAlt = btn.getAttribute('title') || (thumbImg ? thumbImg.alt : '');
+                if (nextAlt) {
+                    mainImg.alt = nextAlt;
+                }
+            }
+
+            document.querySelectorAll('.thumb-btn').forEach(el => {
+                el.classList.remove('border-zinc-950', 'ring-1', 'ring-zinc-950');
+                el.classList.add('border-zinc-200');
+            });
+            btn.classList.remove('border-zinc-200');
+            btn.classList.add('border-zinc-950', 'ring-1', 'ring-zinc-950');
+        }
+
+        function syncBodyScroll() {
+            const specOpen = !document.getElementById('specModal')?.classList.contains('hidden');
+            const loginOpen = !document.getElementById('loginRequiredModal')?.classList.contains('hidden');
+            document.body.classList.toggle('overflow-hidden', Boolean(specOpen || loginOpen));
+        }
+
+        function openSpecModal() {
+            const modal = document.getElementById('specModal');
+            if (!modal) return;
+            modal.classList.remove('hidden');
+            syncBodyScroll();
+        }
+
+        function closeSpecModal() {
+            const modal = document.getElementById('specModal');
+            if (!modal) return;
+            modal.classList.add('hidden');
+            syncBodyScroll();
+        }
+
+        function openLoginRequiredModal() {
+            const modal = document.getElementById('loginRequiredModal');
+            if (!modal) return;
+            modal.classList.remove('hidden');
+            syncBodyScroll();
+        }
+
+        function closeLoginRequiredModal() {
+            const modal = document.getElementById('loginRequiredModal');
+            if (!modal) return;
+            modal.classList.add('hidden');
+            syncBodyScroll();
+        }
+
+        document.addEventListener('click', function (e) {
+            const specModal = document.getElementById('specModal');
+            if (specModal && e.target === specModal) {
+                closeSpecModal();
+            }
+            const loginModal = document.getElementById('loginRequiredModal');
+            if (loginModal && e.target === loginModal) {
+                closeLoginRequiredModal();
+            }
+        });
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                closeSpecModal();
+                closeLoginRequiredModal();
+            }
+        });
+
+        const cartToast = document.getElementById('cartToast');
+        if (cartToast) {
+            setTimeout(() => {
+                cartToast.classList.add('opacity-0');
+                setTimeout(() => cartToast.remove(), 300);
+            }, 3000);
+        }
+    </script>
+
+    <!-- điều khiển bộ chọn đánh giá 5 sao tương tác (#starRatingPicker) trong form gửi đánh giá sản phẩm--> 
+    <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                const picker = document.getElementById("starRatingPicker");
+                if (!picker) return;
+
+                const labels = picker.querySelectorAll(".star-btn");
+                const statusText = document.getElementById("starRatingLabel");
+
+                const ratingDescriptions = {
+                    1: "1 sao — Không hài lòng",
+                    2: "2 sao — Chưa hài lòng",
+                    3: "3 sao — Bình thường",
+                    4: "4 sao — Hài lòng",
+                    5: "5 sao — Tuyệt vời"
+                };
+
+                function getSelectedValue() {
+                    const checked = picker.querySelector('input[name="rating"]:checked');
+                    return checked ? parseInt(checked.value, 10) : 5;
+                }
+
+                function paintStars(activeValue) {
+                    labels.forEach((btn) => {
+                        const val = parseInt(btn.getAttribute("data-value"), 10);
+                        const icon = btn.querySelector("i");
+                        if (!icon) return;
+
+                        if (val <= activeValue) {
+                            icon.classList.remove("fa-regular", "text-zinc-300");
+                            icon.classList.add("fa-solid", "text-amber-400");
+                        } else {
+                            icon.classList.remove("fa-solid", "text-amber-400");
+                            icon.classList.add("fa-regular", "text-zinc-300");
+                        }
+                    });
+
+                    if (statusText) {
+                        statusText.textContent = ratingDescriptions[activeValue] || (activeValue + " sao");
+                    }
+                }
+
+                paintStars(getSelectedValue());
+
+                labels.forEach((btn) => {
+                    const val = parseInt(btn.getAttribute("data-value"), 10);
+
+                    btn.addEventListener("mouseenter", () => paintStars(val));
+
+                    btn.addEventListener("click", () => {
+                        const radio = btn.querySelector('input[type="radio"]');
+                        if (radio) {
+                            radio.checked = true;
+                        }
+                        paintStars(val);
+                    });
+                });
+
+                picker.addEventListener("mouseleave", () => {
+                    paintStars(getSelectedValue());
+                });
+            });
+    </script>
+
+    <!-- triển khai tính năng gợi ý tìm kiếm sản phẩm trực tiếp (Live Search / Autocomplete) trên ô tìm kiếm--> 
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const input = document.getElementById("searchInput");
+            const box = document.getElementById("searchSuggestions");
+            if (!input || !box) return;
+
+            let timer = null;
+
+            input.addEventListener("input", () => {
+                clearTimeout(timer);
+                const q = input.value.trim();
+                if (q.length < 2) {
+                    box.classList.add("hidden");
+                    box.innerHTML = "";
+                    return;
+                }
+
+                timer = setTimeout(async () => {
+                    try {
+                        const res = await fetch(`/products/api/search-suggestions?keyword=${encodeURIComponent(q)}`);
+                        if (!res.ok) return;
+                        const items = await res.json();
+
+                        if (!Array.isArray(items) || items.length === 0) {
+                            box.innerHTML = `<div class="px-3 py-2 text-xs text-zinc-500">Không tìm thấy sản phẩm phù hợp</div>`;
+                            box.classList.remove("hidden");
+                            return;
+                        }
+
+                        box.innerHTML = items.map(item => `
+                            <a href="/products/${item.slug}?variantId=${item.variantId ?? ""}"
+                            class="flex items-center gap-3 px-3 py-2 hover:bg-zinc-50 border-b border-zinc-100 last:border-b-0">
+                                <img src="${item.imageUrl || "/images/default-laptop.png"}"
+                                    alt="${item.productName}"
+                                    class="w-10 h-10 object-contain shrink-0">
+                                <div class="min-w-0 flex-1">
+                                    <div class="text-xs font-semibold text-zinc-900 truncate">${item.productName}</div>
+                                    <div class="text-[11px] text-zinc-500">${item.brandName || ""} • (${item.reviewCount ?? 0} đánh giá)</div>
+                                </div>
+                            </a>
+                        `).join("");
+                        box.classList.remove("hidden");
+                    } catch (err) {
+                        console.error("Lỗi gợi ý tìm kiếm:", err);
+                    }
+                }, 200);
+            });
+
+            document.addEventListener("click", (e) => {
+                if (!input.contains(e.target) && !box.contains(e.target)) {
+                    box.classList.add("hidden");
+                }
+            });
+        });
+    </script>
+    
+    <!-- điều phối toàn bộ tương tác phía client cho khu vực Đánh giá & Hỏi đáp-->    
+    <script th:inline="javascript">
+        (() => {
+            const productSlug = /*[[${product.slug}]]*/ "";
+            const csrfTokenMeta = document.querySelector('meta[name="_csrf"]');
+            const csrfHeaderMeta = document.querySelector('meta[name="_csrf_header"]');
+            const csrfToken = csrfTokenMeta ? csrfTokenMeta.getAttribute("content") : null;
+            const csrfHeader = csrfHeaderMeta ? csrfHeaderMeta.getAttribute("content") : "X-CSRF-TOKEN";
+
+            const reviewsSection = document.getElementById("reviews");
+            const isAuthenticated = reviewsSection
+                ? reviewsSection.getAttribute("data-authenticated") === "true"
+                : false;
+
+            // Bật / tắt form trả lời chính
+            document.querySelectorAll(".reply-toggle-btn, .reply-cancel-btn").forEach((btn) => {
+                btn.addEventListener("click", () => {
+                    const targetId = btn.getAttribute("data-target");
+                    const form = document.getElementById(targetId);
+                    if (!form) return;
+                    form.classList.toggle("hidden");
+                    if (!form.classList.contains("hidden")) {
+                        const textarea = form.querySelector("textarea");
+                        if (textarea) textarea.focus();
+                    }
+                });
+            });
+
+            // Trả lời trực tiếp một câu trả lời con (mở form của thread cha + điền @Tên)
+            document.querySelectorAll(".reply-to-btn").forEach((btn) => {
+                btn.addEventListener("click", () => {
+                    const targetId = btn.getAttribute("data-target");
+                    const mentionName = (btn.getAttribute("data-mention") || "").trim();
+                    const form = document.getElementById(targetId);
+                    if (!form) return;
+
+                    form.classList.remove("hidden");
+                    const textarea = form.querySelector("textarea");
+                    if (textarea) {
+                        if (mentionName && !textarea.value.trim().startsWith("@" + mentionName)) {
+                            const prefix = "@" + mentionName + " ";
+                            textarea.value = textarea.value.trim() ? prefix + textarea.value.trimStart() : prefix;
+                        }
+                        textarea.focus();
+                    }
+                });
+            });
+            // Chặn submit form đánh giá & trả lời khi chưa đăng nhập -> mở modal hỏi đăng nhập
+            const reviewSectionForms = reviewsSection
+                ? reviewsSection.querySelectorAll('form[method="post"]')
+                : [];
+
+            reviewSectionForms.forEach((form) => {
+                // Bỏ qua các form nút Xóa (vì chỉ người sở hữu đã đăng nhập mới thấy)
+                if (form.action && form.action.includes("/delete")) return;
+
+                form.addEventListener("submit", (e) => {
+                    if (!isAuthenticated) {
+                        e.preventDefault();
+                        if (typeof openLoginRequiredModal === "function") {
+                            openLoginRequiredModal();
+                        }
+                    }
+                });
+            });
+            // Thả / gỡ reaction qua AJAX (chỉ gắn 1 listener duy nhất)
+            document.querySelectorAll(".reaction-btn").forEach((btn) => {
+                btn.addEventListener("click", async () => {
+                    if (!isAuthenticated) {
+                        if (typeof openLoginRequiredModal === "function") {
+                            openLoginRequiredModal();
+                        }
+                        return;
+                    }
+
+                    const reviewId = btn.getAttribute("data-review-id");
+                    const reactionType = btn.getAttribute("data-reaction-type");
+                    if (!reviewId || !reactionType || !productSlug) return;
+
+                    const body = new URLSearchParams({ type: reactionType });
+                    const headers = { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" };
+                    if (csrfToken) {
+                        headers[csrfHeader] = csrfToken;
+                    }
+
+                    try {
+                        const res = await fetch(`/products/${encodeURIComponent(productSlug)}/reviews/${reviewId}/reactions`, {
+                            method: "POST",
+                            headers,
+                            body
+                        });
+
+                        if (res.status === 401) {
+                            if (typeof openLoginRequiredModal === "function") {
+                                openLoginRequiredModal();
+                            }
+                            return;
+                        }
+
+                        if (!res.ok) return;
+                        const counts = await res.json();
+
+                        const container = btn.parentElement;
+                        if (!container) return;
+
+                        container.querySelectorAll(".reaction-btn").forEach((siblingBtn) => {
+                            const typeKey = siblingBtn.getAttribute("data-reaction-type");
+                            const countEl = siblingBtn.querySelector(".reaction-count");
+                            if (countEl && counts && Object.prototype.hasOwnProperty.call(counts, typeKey)) {
+                                countEl.textContent = counts[typeKey];
+                            }
+                        });
+
+                        btn.classList.toggle("border-indigo-400");
+                        btn.classList.toggle("bg-indigo-50");
+                    } catch (err) {
+                        console.error("Reaction toggle failed:", err);
+                    }
+                });
+            });
+        })();
+    </script>
+</body>
+</html>

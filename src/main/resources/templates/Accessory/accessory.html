@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phụ kiện Laptop &amp; Gaming | Electronics Store</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body class="bg-zinc-50 text-zinc-900 antialiased">
+
+    <!-- Header -->
+    <header class="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-zinc-200/80 supports-[backdrop-filter]:bg-white/70">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-6">
+
+            <!-- 1. Logo & Danh mục -->
+            <div class="flex items-center gap-10">
+                <a th:href="@{/}" href="#" class="flex items-center gap-2.5 group focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-600">
+                    <div class="w-9 h-9 bg-zinc-950 flex items-center justify-center text-white group-hover:bg-blue-600 transition-colors duration-300">
+                        <i class="fa-solid fa-laptop text-[15px]"></i>
+                    </div>
+                    <span class="text-[17px] font-extrabold tracking-tight text-zinc-950">
+                        Electronics
+                    </span>
+                </a>
+
+                <!-- Menu danh mục với Dropdown (Desktop) -->
+                <nav class="hidden lg:flex items-center gap-1 text-[13px] font-medium text-zinc-600">
+
+                    <!-- 1. Danh mục Laptop (Có Dropdown) -->
+                    <div class="relative group">
+                        <button type="button" class="flex items-center gap-1.5 px-3 py-2 hover:text-zinc-950 hover:bg-zinc-100 transition-colors">
+                            <span>Laptop</span>
+                            <i class="fa-solid fa-chevron-down text-[10px] text-zinc-400 group-hover:rotate-180 transition-transform"></i>
+                        </button>
+                        <!-- Dropdown Panel -->
+                        <div class="absolute top-full left-0 w-56 bg-white border border-zinc-200 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 py-2">
+                            <a th:href="@{/(category='Gaming')} + '#products'"
+                            class="flex items-center justify-between px-4 py-2.5 hover:bg-zinc-50 hover:text-blue-600 transition-colors">
+                                <span>Laptop Gaming</span>
+                                <span class="text-[10px] bg-zinc-100 text-zinc-600 px-1.5 py-0.5">MSI, Asus</span>
+                            </a>
+                            <a th:href="@{/(category='Văn Phòng')} + '#products'"
+                            class="flex items-center justify-between px-4 py-2.5 hover:bg-zinc-50 hover:text-blue-600 transition-colors">
+                                <span>Laptop Văn Phòng</span>
+                                <span class="text-[10px] bg-zinc-100 text-zinc-600 px-1.5 py-0.5">Acer, Lenovo</span>
+                            </a>
+                            <a th:href="@{/Admin/admin}"
+                            class="block px-4 py-2 hover:bg-zinc-50 hover:text-blue-600 font-semibold transition-colors">
+                                Admin
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- 2. Thương hiệu (Có Dropdown tự động theo DB brands) -->
+                    <div class="relative group">
+                        <button type="button" class="flex items-center gap-1.5 px-3 py-2 hover:text-zinc-950 hover:bg-zinc-100 transition-colors">
+                            <span>Thương Hiệu</span>
+                            <i class="fa-solid fa-chevron-down text-[10px] text-zinc-400 group-hover:rotate-180 transition-transform"></i>
+                        </button>
+                        <!-- Dropdown Panel -->
+                        <div class="absolute top-full left-0 w-48 bg-white border border-zinc-200 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 py-2">
+                            <th:block th:if="${brands != null and !#lists.isEmpty(brands)}">
+                                <a th:each="b : ${brands}"
+                                th:if="${b.status == null or b.status}"
+                                th:href="@{/accessories(brand=${b.brandName}, type=${selectedType != null and selectedType != 'ALL' ? selectedType : null})}"
+                                th:text="${b.brandName}"
+                                th:classappend="${selectedBrand != null and #strings.equalsIgnoreCase(selectedBrand, b.brandName)} ? 'text-blue-600 bg-zinc-50' : ''"
+                                class="block px-4 py-2 hover:bg-zinc-50 hover:text-blue-600 font-semibold transition-colors">
+                                    MSI
+                                </a>
+                            </th:block>
+
+                            <th:block th:unless="${brands != null and !#lists.isEmpty(brands)}">
+                                <a th:each="b : ${ {'MSI', 'ACER', 'ASUS', 'LENOVO'} }"
+                                th:href="@{/accessories(brand=${b}, type=${selectedType != null and selectedType != 'ALL' ? selectedType : null})}"
+                                th:text="${b}"
+                                th:classappend="${selectedBrand != null and #strings.equalsIgnoreCase(selectedBrand, b)} ? 'text-blue-600 bg-zinc-50' : ''"
+                                class="block px-4 py-2 hover:bg-zinc-50 hover:text-blue-600 font-semibold transition-colors">
+                                    MSI
+                                </a>
+                            </th:block>
+                        </div>
+                    </div>
+
+                    <!-- 3. Phụ kiện (Đang active trên trang Phụ kiện) -->
+                    <a th:href="@{/accessories}"
+                    class="px-3 py-2 text-blue-600 bg-zinc-100 font-semibold transition-colors">
+                        Phụ Kiện
+                    </a>
+                </nav>
+            </div>
+
+            <!-- 2. Ô Tìm Kiếm Phụ Kiện (Trung tâm) -->
+            <div id="searchContainer" class="hidden md:flex flex-1 max-w-sm relative">
+                <form th:action="@{/accessories}" method="get" class="relative w-full" autocomplete="off">
+                    <input th:if="${selectedBrand != null and selectedBrand != 'ALL'}"
+                        type="hidden" name="brand" th:value="${selectedBrand}">
+                    <input th:if="${selectedType != null and selectedType != 'ALL'}"
+                        type="hidden" name="type" th:value="${selectedType}">
+
+                    <input type="text"
+                        id="liveSearchInput"
+                        name="keyword"
+                        th:value="${keyword}"
+                        placeholder="Tìm chuột, bàn phím, hub, sạc, balo..."
+                        class="w-full h-10 bg-zinc-100 border border-transparent pl-10 pr-9 text-[13px] text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:bg-white focus:border-zinc-900 transition-colors">
+
+                    <button type="submit" aria-label="Tìm kiếm"
+                            class="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-950 text-[13px] transition-colors">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </button>
+
+                    <a th:if="${keyword != null and !keyword.isEmpty()}"
+                    th:href="@{/accessories(brand=${selectedBrand != null and selectedBrand != 'ALL' ? selectedBrand : null}, type=${selectedType != null and selectedType != 'ALL' ? selectedType : null})}"
+                    title="Xóa từ khóa tìm kiếm"
+                    class="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-950 text-xs transition-colors">
+                        <i class="fa-solid fa-xmark"></i>
+                    </a>
+                </form>
+            </div>
+
+            <!-- 3. Giỏ hàng & Đăng nhập (Góc phải) -->
+            <div class="flex items-center gap-2">
+                <!-- Nút Giỏ hàng khi ĐÃ đăng nhập -->
+                <a th:if="${currentUserFullName != null}"
+                th:href="@{/cart}"
+                class="relative w-10 h-10 flex items-center justify-center hover:bg-zinc-100 text-zinc-700 transition-colors focus-visible:outline-2 focus-visible:outline-blue-600"
+                aria-label="Giỏ hàng">
+                    <i class="fa-solid fa-cart-shopping text-[15px]"></i>
+                    <span th:text="${cartCount != null ? cartCount : 0}"
+                        class="absolute top-1.5 right-1.5 bg-blue-600 text-white text-[10px] font-bold min-w-4 h-4 px-1 flex items-center justify-center tabular-nums ring-2 ring-white">
+                        0
+                    </span>
+                </a>
+
+                <!-- Nút Giỏ hàng khi CHƯA đăng nhập -->
+                <button th:if="${currentUserFullName == null}"
+                        type="button"
+                        onclick="openLoginRequiredModal()"
+                        class="relative w-10 h-10 flex items-center justify-center hover:bg-zinc-100 text-zinc-700 transition-colors focus-visible:outline-2 focus-visible:outline-blue-600"
+                        aria-label="Giỏ hàng">
+                    <i class="fa-solid fa-cart-shopping text-[15px]"></i>
+                    <span class="absolute top-1.5 right-1.5 bg-blue-600 text-white text-[10px] font-bold min-w-4 h-4 px-1 flex items-center justify-center tabular-nums ring-2 ring-white">
+                        0
+                    </span>
+                </button>
+
+                <!-- Khi CHƯA đăng nhập -->
+                <div th:if="${currentUserFullName == null}" class="flex items-center gap-3">
+                    <a th:href="@{/login}"
+                    class="text-xs font-semibold uppercase tracking-wider text-zinc-700 hover:text-blue-600 transition-colors">
+                        Đăng nhập
+                    </a>
+                    <span class="text-zinc-300">|</span>
+                    <a th:href="@{/register}"
+                    class="text-xs font-semibold uppercase tracking-wider text-zinc-700 hover:text-blue-600 transition-colors">
+                        Đăng ký
+                    </a>
+                </div>
+
+                <!-- Khi ĐÃ đăng nhập -->
+                <div th:if="${currentUserFullName != null}" class="flex items-center gap-3">
+                    <span class="text-xs font-semibold text-zinc-800 flex items-center gap-1.5">
+                        <i class="fa-regular fa-user text-blue-600"></i>
+                        <span th:text="${currentUserFullName}">Tên người dùng</span>
+                    </span>
+                    <form th:action="@{/logout}" method="post" class="inline">
+                        <button type="submit"
+                                class="text-xs font-semibold text-red-600 hover:underline ml-1">
+                            Đăng xuất
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-6">
+
+        <!-- Tiêu đề & thống kê -->
+        <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-3 border-b border-zinc-200 pb-4">
+            <div>
+                <p class="text-[11px] font-bold uppercase tracking-widest text-blue-600">Gear &amp; Peripherals</p>
+                <h1 class="text-2xl font-extrabold text-zinc-950 mt-0.5">Phụ kiện Laptop &amp; Gaming</h1>
+                <p class="text-xs text-zinc-500 mt-1">Chuột, bàn phím cơ, tai nghe, đế tản nhiệt, balo, hub chuyển đổi và sạc nhanh</p>
+            </div>
+            <div class="text-xs text-zinc-500">
+                Hiển thị <strong class="text-zinc-900" th:text="${accessories != null ? #lists.size(accessories) : 0}">0</strong> phụ kiện
+            </div>
+        </div>
+
+        <!-- Bộ lọc Loại phụ kiện & Hãng -->
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+            <!-- Lọc theo loại -->
+            <div class="flex items-center gap-1.5 overflow-x-auto pb-1">
+                <a th:href="@{/accessories(brand=${selectedBrand != null and selectedBrand != 'ALL' ? selectedBrand : null}, keyword=${keyword})}"
+                   th:classappend="${selectedType == null or selectedType == 'ALL'} ? 'bg-zinc-950 text-white border-zinc-950' : 'bg-white text-zinc-600 border-zinc-200 hover:text-zinc-950'"
+                   class="h-8 px-3.5 border text-xs font-semibold whitespace-nowrap inline-flex items-center transition-colors">
+                    Tất cả loại
+                </a>
+                <a th:each="t : ${accessoryTypes}"
+                   th:href="@{/accessories(type=${t}, brand=${selectedBrand != null and selectedBrand != 'ALL' ? selectedBrand : null}, keyword=${keyword})}"
+                   th:text="${t}"
+                   th:classappend="${selectedType != null and #strings.equalsIgnoreCase(selectedType, t)} ? 'bg-zinc-950 text-white border-zinc-950' : 'bg-white text-zinc-600 border-zinc-200 hover:text-zinc-950'"
+                   class="h-8 px-3.5 border text-xs font-semibold whitespace-nowrap inline-flex items-center transition-colors">
+                    Chuột
+                </a>
+            </div>
+
+            <!-- Lọc theo hãng -->
+            <div class="flex items-center gap-1.5 overflow-x-auto pb-1">
+                <span class="text-[11px] font-bold uppercase text-zinc-400 mr-1">Hãng:</span>
+                <a th:href="@{/accessories(type=${selectedType != null and selectedType != 'ALL' ? selectedType : null}, keyword=${keyword})}"
+                   th:classappend="${selectedBrand == null or selectedBrand == 'ALL'} ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-zinc-600 border-zinc-200 hover:text-zinc-950'"
+                   class="h-8 px-3 border text-xs font-semibold whitespace-nowrap inline-flex items-center transition-colors">
+                    Tất cả
+                </a>
+                <a th:each="b : ${brands}"
+                   th:if="${b.status == null or b.status}"
+                   th:href="@{/accessories(type=${selectedType != null and selectedType != 'ALL' ? selectedType : null}, brand=${b.brandName}, keyword=${keyword})}"
+                   th:text="${b.brandName}"
+                   th:classappend="${selectedBrand != null and #strings.equalsIgnoreCase(selectedBrand, b.brandName)} ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-zinc-600 border-zinc-200 hover:text-zinc-950'"
+                   class="h-8 px-3 border text-xs font-semibold whitespace-nowrap inline-flex items-center transition-colors">
+                    MSI
+                </a>
+            </div>
+        </div>
+
+        <!-- Trạng thái rỗng -->
+        <div th:if="${accessories == null or #lists.isEmpty(accessories)}"
+             class="bg-white border border-zinc-200 py-14 px-6 text-center space-y-2">
+            <p class="text-sm font-bold text-zinc-800">Không tìm thấy phụ kiện phù hợp</p>
+            <p class="text-xs text-zinc-500">Thử đổi từ khóa hoặc chọn lại bộ lọc loại / hãng.</p>
+            <a th:href="@{/accessories}" class="inline-block mt-2 px-4 py-2 bg-zinc-950 text-white text-xs font-bold uppercase">
+                Xóa bộ lọc
+            </a>
+        </div>
+
+        <!-- Lưới phụ kiện -->
+        <div th:if="${accessories != null and !#lists.isEmpty(accessories)}"
+             class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            <article th:each="acc : ${accessories}"
+                     class="bg-white border border-zinc-200 flex flex-col justify-between hover:border-zinc-400 transition-colors">
+                <div>
+                    <!-- Ảnh phụ kiện -->
+                    <div class="aspect-[4/3] bg-zinc-100 border-b border-zinc-100 overflow-hidden relative">
+                        <img th:if="${acc.imageUrl != null and !#strings.isEmpty(acc.imageUrl)}"
+                             th:src="${acc.imageUrl}"
+                             th:alt="${acc.accessoryName}"
+                             class="w-full h-full object-cover">
+                        <div th:unless="${acc.imageUrl != null and !#strings.isEmpty(acc.imageUrl)}"
+                             class="w-full h-full flex flex-col items-center justify-center text-zinc-400 gap-1.5">
+                            <i class="fa-solid fa-plug text-2xl"></i>
+                            <span class="text-[11px] font-mono" th:text="${acc.accessoryCode}">ACC-001</span>
+                        </div>
+
+                        <!-- Badge giảm giá -->
+                        <span th:if="${acc.discountPrice != null and acc.price != null and acc.discountPrice.compareTo(acc.price) < 0}"
+                              class="absolute top-2.5 left-2.5 px-2 py-0.5 bg-red-600 text-white text-[10px] font-bold uppercase">
+                            Giảm giá
+                        </span>
+                    </div>
+
+                    <!-- Thông tin -->
+                    <div class="p-4 space-y-2">
+                        <div class="flex items-center justify-between text-[11px] text-zinc-500">
+                            <span class="font-bold uppercase text-blue-600" th:text="${acc.accessoryType != null ? acc.accessoryType : 'Phụ kiện'}">Chuột</span>
+                            <span class="font-semibold text-zinc-700" th:text="${acc.brand != null ? acc.brand.brandName : ''}">Logitech</span>
+                        </div>
+
+                        <h2 class="text-sm font-bold text-zinc-900 line-clamp-2 min-h-[2.5rem]"
+                            th:text="${acc.accessoryName}">
+                            Chuột Gaming Không Dây Logitech G304 Lightspeed
+                        </h2>
+
+                        <p th:if="${acc.compatibility != null and !#strings.isEmpty(acc.compatibility)}"
+                           class="text-[11px] text-zinc-500 line-clamp-1">
+                            <i class="fa-solid fa-circle-check text-emerald-600 mr-1"></i>
+                            <span th:text="${acc.compatibility}">Windows, macOS</span>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Giá & Tồn kho -->
+                <div class="px-4 pb-4 pt-2 border-t border-zinc-100 flex items-end justify-between gap-2">
+                    <div>
+                        <div th:if="${acc.discountPrice != null}"
+                             class="text-sm font-extrabold text-zinc-950"
+                             th:text="${#numbers.formatDecimal(acc.discountPrice, 0, 'COMMA', 0, 'POINT')} + '₫'">
+                            690.000₫
+                        </div>
+                        <div th:classappend="${acc.discountPrice != null} ? 'text-[11px] line-through text-zinc-400' : 'text-sm font-extrabold text-zinc-950'"
+                             th:text="${acc.price != null ? #numbers.formatDecimal(acc.price, 0, 'COMMA', 0, 'POINT') + '₫' : 'Liên hệ'}">
+                            890.000₫
+                        </div>
+                    </div>
+
+                    <span th:if="${acc.stockQuantity != null and acc.stockQuantity > 0}"
+                          class="text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5">
+                        Còn <span th:text="${acc.stockQuantity}">10</span>
+                    </span>
+                    <span th:unless="${acc.stockQuantity != null and acc.stockQuantity > 0}"
+                          class="text-[11px] font-semibold text-zinc-500 bg-zinc-100 border border-zinc-200 px-2 py-0.5">
+                        Hết hàng
+                    </span>
+                </div>
+            </article>
+        </div>
+    </main>
+</body>
+</html>

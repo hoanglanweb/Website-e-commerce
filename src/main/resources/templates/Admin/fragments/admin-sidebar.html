@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<body>
+    <aside th:fragment="sidebar(activeMenu)"
+           id="adminSidebar"
+           class="hidden lg:flex w-60 bg-white border-r border-zinc-200 shrink-0 flex-col justify-between">
+        <div class="p-4 space-y-5"
+             th:with="menu=${activeMenu != null ? activeMenu : ''},
+                      isProductGroup=${menu == 'products' or menu == 'product-form' or menu == 'accessories' or menu == 'accessory-form'}">
+            <!-- Nhóm chính -->
+            <nav class="space-y-1 text-xs font-bold uppercase tracking-wider">
+                <a th:href="@{/admin}"
+                   th:classappend="${menu == 'dashboard'} ? 'bg-zinc-950 text-white' : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-950'"
+                   class="flex items-center gap-3 px-3.5 py-2.5 transition-colors">
+                    <i class="fa-solid fa-chart-line w-4 text-center"></i>
+                    <span>Tổng quan</span>
+                </a>
+
+                <a th:href="@{/admin/orders}"
+                   th:classappend="${menu == 'orders'} ? 'bg-zinc-950 text-white' : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-950'"
+                   class="flex items-center gap-3 px-3.5 py-2.5 transition-colors">
+                    <i class="fa-solid fa-receipt w-4 text-center"></i>
+                    <span>Đơn hàng</span>
+                </a>
+
+                <!-- Dropdown Sản phẩm: tách riêng Laptop & Phụ kiện -->
+                <div class="space-y-1">
+                    <button type="button"
+                            onclick="toggleProductSubmenu()"
+                            th:classappend="${isProductGroup} ? 'bg-zinc-100 text-zinc-950' : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-950'"
+                            class="w-full flex items-center justify-between px-3.5 py-2.5 text-xs font-bold uppercase tracking-wider transition-colors">
+                        <span class="flex items-center gap-3">
+                            <i class="fa-solid fa-laptop w-4 text-center"></i>
+                            <span>Sản phẩm</span>
+                        </span>
+                        <i id="productSubmenuChevron"
+                           class="fa-solid fa-chevron-down text-[10px] transition-transform duration-200"
+                           th:classappend="${isProductGroup} ? 'rotate-180' : ''"></i>
+                    </button>
+
+                    <div id="productSubmenu"
+                         th:classappend="${isProductGroup} ? '' : 'hidden'"
+                         class="ml-5 pl-3 py-1 space-y-1 border-l border-zinc-200 normal-case font-semibold tracking-normal">
+
+                        <a th:href="@{/admin/products}"
+                           th:classappend="${menu == 'products'} ? 'bg-zinc-950 text-white font-bold' : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-950'"
+                           class="flex items-center justify-between px-3 py-2 text-xs transition-colors">
+                            <span>Danh sách Laptop</span>
+                            <i class="fa-solid fa-display text-[11px] opacity-75"></i>
+                        </a>
+
+                        <a th:href="@{/admin/products/new}"
+                           th:classappend="${menu == 'product-form'} ? 'bg-zinc-950 text-white font-bold' : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-950'"
+                           class="flex items-center justify-between px-3 py-2 text-xs transition-colors">
+                            <span>+ Thêm Laptop</span>
+                            <i class="fa-solid fa-plus text-[11px] text-emerald-600"></i>
+                        </a>
+
+                        <a th:href="@{/admin/accessories}"
+                           th:classappend="${menu == 'accessories'} ? 'bg-zinc-950 text-white font-bold' : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-950'"
+                           class="flex items-center justify-between px-3 py-2 text-xs transition-colors">
+                            <span>Danh sách Phụ kiện</span>
+                            <i class="fa-solid fa-keyboard text-[11px] opacity-75"></i>
+                        </a>
+
+                        <a th:href="@{/admin/accessories/new}"
+                           th:classappend="${menu == 'accessory-form'} ? 'bg-zinc-950 text-white font-bold' : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-950'"
+                           class="flex items-center justify-between px-3 py-2 text-xs transition-colors">
+                            <span>+ Thêm Phụ kiện</span>
+                            <i class="fa-solid fa-plus text-[11px] text-blue-600"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <a th:href="@{/admin/categories}"
+                   th:classappend="${menu == 'catalog'} ? 'bg-zinc-950 text-white' : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-950'"
+                   class="flex items-center gap-3 px-3.5 py-2.5 transition-colors">
+                    <i class="fa-solid fa-tags w-4 text-center"></i>
+                    <span>Hãng & Danh mục</span>
+                </a>
+
+                <a th:href="@{/admin/customers}"
+                   th:classappend="${menu == 'customers'} ? 'bg-zinc-950 text-white' : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-950'"
+                   class="flex items-center gap-3 px-3.5 py-2.5 transition-colors">
+                    <i class="fa-solid fa-users w-4 text-center"></i>
+                    <span>Khách hàng</span>
+                </a>
+
+                <a th:href="@{/admin/promotions}"
+                   th:classappend="${menu == 'promotions'} ? 'bg-zinc-950 text-white' : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-950'"
+                   class="flex items-center gap-3 px-3.5 py-2.5 transition-colors">
+                    <i class="fa-solid fa-percent w-4 text-center"></i>
+                    <span>Khuyến mãi</span>
+                </a>
+            </nav>
+
+            <!-- Liên kết nhanh sang cửa hàng -->
+            <div class="pt-4 border-t border-zinc-200 space-y-1 text-xs font-bold uppercase tracking-wider">
+                <a th:href="@{/}"
+                   target="_blank"
+                   class="flex items-center justify-between px-3.5 py-2.5 text-zinc-600 hover:bg-zinc-100 hover:text-zinc-950 transition-colors">
+                    <span class="flex items-center gap-3">
+                        <i class="fa-solid fa-store w-4 text-center text-blue-600"></i>
+                        <span>Xem cửa hàng</span>
+                    </span>
+                    <i class="fa-solid fa-up-right-from-square text-[10px] text-zinc-400"></i>
+                </a>
+            </div>
+        </div>
+
+        <div class="p-4 border-t border-zinc-200 text-[11px] text-zinc-500">
+            Khu vực giao hàng mặc định: <strong class="text-zinc-800">TP. Hồ Chí Minh</strong>
+        </div>
+
+        <script>
+            function toggleProductSubmenu() {
+                const menu = document.getElementById('productSubmenu');
+                const chevron = document.getElementById('productSubmenuChevron');
+                if (!menu) return;
+                menu.classList.toggle('hidden');
+                if (chevron) {
+                    chevron.classList.toggle('rotate-180');
+                }
+            }
+        </script>
+    </aside>
+</body>
+</html>

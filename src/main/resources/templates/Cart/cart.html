@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giỏ hàng của bạn | Electronics Store</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body class="bg-zinc-50 text-zinc-950 antialiased min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-zinc-200 sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <a th:href="@{/}" class="text-lg font-extrabold tracking-tight uppercase">
+                ELECTRONICS<span class="text-blue-600">.STORE</span>
+            </a>
+
+            <div class="flex items-center gap-4 sm:gap-6">
+                <a th:href="@{/}"
+                   class="text-xs font-semibold uppercase tracking-wider text-zinc-600 hover:text-zinc-950 flex items-center gap-2 transition-colors">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    <span class="hidden sm:inline">Tiếp tục mua sắm</span>
+                </a>
+
+                <div th:if="${currentUserFullName != null}" class="hidden md:flex items-center gap-2 text-xs text-zinc-600 border-l border-zinc-200 pl-4">
+                    <i class="fa-regular fa-user text-blue-600"></i>
+                    <span class="font-semibold text-zinc-900" th:text="${currentUserFullName}">Khách hàng</span>
+                </div>
+
+                <div class="inline-flex items-center gap-2 px-3.5 py-2 bg-zinc-950 text-white text-xs font-semibold uppercase tracking-wider">
+                    <i class="fa-solid fa-bag-shopping text-sm"></i>
+                    <span>Giỏ hàng</span>
+                    <span th:text="${totalQuantity != null ? totalQuantity : 0}"
+                          class="ml-0.5 px-1.5 py-0.5 text-[10px] font-bold bg-blue-600 text-white rounded-full tabular-nums">
+                        0
+                    </span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Thông báo phản hồi từ Spring Boot -->
+    <div th:if="${cartToastMessage != null}"
+         id="cartToast"
+         class="fixed bottom-5 right-5 z-50 bg-zinc-950 text-white px-5 py-3.5 rounded-lg shadow-lg border border-zinc-800 flex items-center gap-3 text-sm transition-opacity duration-300">
+        <i class="fa-solid fa-circle-check text-emerald-400"></i>
+        <span th:text="${cartToastMessage}"></span>
+    </div>
+
+    <main class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
+        <!-- Breadcrumb -->
+        <nav class="flex items-center gap-2 text-xs text-zinc-500 mb-6">
+            <a th:href="@{/}" class="hover:text-zinc-950">Trang chủ</a>
+            <span>/</span>
+            <span class="text-zinc-950 font-semibold">Giỏ hàng của bạn</span>
+        </nav>
+
+        <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+            <div>
+                <h1 class="text-2xl font-bold tracking-tight text-zinc-950">
+                    Giỏ hàng (<span th:text="${totalQuantity != null ? totalQuantity : 0}">0</span> sản phẩm)
+                </h1>
+                <p th:if="${currentUserFullName != null}" class="text-xs text-zinc-500 mt-1">
+                    Giỏ hàng được đồng bộ trực tiếp với tài khoản <strong th:text="${currentUserFullName}" class="text-zinc-800"></strong>
+                </p>
+            </div>
+
+            <form th:if="${!#lists.isEmpty(cartItems)}" th:action="@{/cart/clear}" method="post">
+                <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                <button type="submit"
+                        class="text-xs font-semibold text-red-600 hover:text-red-700 flex items-center gap-1.5 px-3 py-2 border border-red-200 bg-red-50/50 hover:bg-red-50 transition-colors">
+                    <i class="fa-regular fa-trash-can"></i> Xóa toàn bộ giỏ hàng
+                </button>
+            </form>
+        </div>
+
+        <!-- Trường hợp 1: Giỏ hàng TRỐNG -->
+        <div th:if="${#lists.isEmpty(cartItems)}"
+             class="bg-white border border-zinc-200 p-14 text-center flex flex-col items-center justify-center">
+            <div class="w-16 h-16 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-400 text-2xl mb-4">
+                <i class="fa-solid fa-cart-shopping"></i>
+            </div>
+            <h2 class="text-lg font-bold text-zinc-900 mb-1">Giỏ hàng của bạn đang trống</h2>
+            <p class="text-sm text-zinc-500 max-w-md mb-6">
+                Hãy khám phá các dòng laptop văn phòng và gaming chính hãng để thêm vào giỏ hàng của bạn.
+            </p>
+            <a th:href="@{/}"
+               class="px-6 py-3 bg-zinc-950 hover:bg-blue-600 text-white text-xs font-bold uppercase tracking-wider transition-colors">
+                Khám phá sản phẩm ngay
+            </a>
+        </div>
+
+        <!-- Trường hợp 2: Giỏ hàng CÓ SẢN PHẨM -->
+        <div th:if="${!#lists.isEmpty(cartItems)}" class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+
+            <!-- Cột trái: Danh sách sản phẩm + Ưu đãi từng sản phẩm + Checkbox Voucher & HSSV (8 cột) -->
+            <div class="lg:col-span-8 space-y-4">
+                <div class="bg-white border border-zinc-200 divide-y divide-zinc-200">
+                    <div th:each="item : ${cartItems}"
+                         class="p-5 sm:p-6 flex flex-col sm:flex-row items-start justify-between gap-5">
+
+                        <!-- Ảnh + Thông tin máy + Ưu đãi theo sản phẩm -->
+                        <div class="flex items-start gap-4 min-w-0 flex-1">
+                            <a th:href="@{/products/{slug}(slug=${item.slug}, variantId=${item.variantId})}"
+                               class="w-24 h-20 bg-zinc-100 border border-zinc-200 p-2 flex-shrink-0 flex items-center justify-center">
+                                <img th:src="${item.imageUrl != null && !#strings.isEmpty(item.imageUrl) ? item.imageUrl : '/images/default-laptop.png'}"
+                                     th:alt="${item.productName}"
+                                     referrerpolicy="no-referrer"
+                                     onerror="this.onerror=null; this.src='/images/default-laptop.png';"
+                                     class="w-full h-full object-contain">
+                            </a>
+
+                            <div class="min-w-0 flex-1">
+                                <div class="flex flex-wrap items-center gap-2 mb-1">
+                                    <span th:if="${item.brandName != null and !item.brandName.isEmpty()}"
+                                          th:text="${item.brandName}"
+                                          class="bg-zinc-950 text-white text-[9px] font-bold px-1.5 py-0.5 uppercase tracking-wider">
+                                        BRAND
+                                    </span>
+                                    <span class="text-[10px] font-mono text-zinc-500 bg-zinc-100 px-1.5 py-0.5 border border-zinc-200"
+                                          th:text="${item.sku}">SKU</span>
+                                    <span class="text-[11px] font-semibold text-blue-600"
+                                          th:text="${item.variantName}">Phiên bản</span>
+                                </div>
+
+                                <a th:href="@{/products/{slug}(slug=${item.slug}, variantId=${item.variantId})}"
+                                   th:text="${item.productName}"
+                                   class="text-sm sm:text-base font-bold text-zinc-950 hover:text-blue-600 transition-colors line-clamp-2">
+                                    Tên sản phẩm
+                                </a>
+
+                                <p th:if="${item.configurationSummary != null}"
+                                   th:text="${item.configurationSummary}"
+                                   class="text-xs text-zinc-500 mt-1 line-clamp-2">
+                                    Cấu hình tóm tắt
+                                </p>
+
+                                <div class="mt-2 flex items-center gap-2 text-xs tabular-nums">
+                                    <span class="text-zinc-500">Đơn giá:</span>
+                                    <span class="font-bold text-zinc-900"
+                                          th:text="${item.unitPrice != null ? #numbers.formatDecimal(item.unitPrice, 0, 'POINT', 0, 'COMMA') + 'đ' : '0đ'}"></span>
+                                    <span th:if="${item.originalPrice != null and item.unitPrice != null and item.originalPrice.compareTo(item.unitPrice) > 0}"
+                                          th:text="${#numbers.formatDecimal(item.originalPrice, 0, 'POINT', 0, 'COMMA') + 'đ'}"
+                                          class="text-zinc-400 line-through text-[11px]"></span>
+                                </div>
+
+                                <!-- Ưu đãi & Khuyến mại nằm ngay trong từng sản phẩm (UI, logic làm sau) -->
+                                <div class="mt-3 w-full  p-3 space-y-2 text-[11px] text-zinc-700">
+                                    <div class="flex items-center justify-between border-b border-zinc-200/80 pb-1.5">
+                                        <span class="font-bold uppercase tracking-wider text-[10px] text-zinc-900 flex items-center gap-1.5">
+                                            <i class="fa-solid fa-gift text-blue-600"></i>
+                                            <span>Ưu đãi & khuyến mại của sản phẩm</span>
+                                        </span>
+                                        <span class="text-[10px] text-zinc-400">Hiển thị theo item</span>
+                                    </div>
+
+                                    <ul class="space-y-1.5 leading-relaxed">
+                                        <li>
+                                            <span>• <strong>Voucher 500K</strong> — mua ngay Robot hút bụi lau nhà, Tivi, Tủ lạnh, Máy giặt (Voucher phát ngay về tin nhắn sau khi mua điện thoại, laptop).</span>
+                                            <span class="block text-[10px] text-zinc-500 pl-2.5">
+                                                <strong>Note:</strong> Thông tin ưu đãi hiển thị trên giao diện, chưa tự động phát mã hoặc trừ tiền.
+                                            </span>
+                                        </li>
+
+                                        <li>
+                                            <span>• <strong>Trả góp 0% lãi suất</strong>, tối đa <strong>12 tháng</strong>, trả trước từ <strong>10%</strong> qua CTTC hoặc <strong>0đ</strong> qua thẻ tín dụng.</span>
+                                            <span class="block text-[10px] text-zinc-500 pl-2.5">
+                                                <strong>Note:</strong> Điều kiện áp dụng tùy theo CTTC hoặc ngân hàng phát hành thẻ.
+                                            </span>
+                                        </li>
+
+                                        <li>
+                                            <span>• Giảm <strong>5% tối đa 1.000.000đ</strong> cho <strong>Student</strong>.</span>
+                                            <span class="block text-[10px] text-zinc-500 pl-2.5">
+                                                <strong>Note:</strong> Chỉ hiển thị điều kiện ưu đãi trên giao diện; logic kiểm tra thành viên & giảm giá sẽ làm sau.
+                                            </span>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Bộ điều chỉnh số lượng + Thành tiền + Nút xóa -->
+                        <div class="w-full sm:w-auto flex sm:flex-col items-center sm:items-end justify-between gap-3 pt-3 sm:pt-0 border-t sm:border-t-0 border-zinc-100 flex-shrink-0">
+                            <div class="text-right">
+                                <div class="text-base font-extrabold text-blue-600 tabular-nums"
+                                     th:text="${item.subtotal != null ? #numbers.formatDecimal(item.subtotal, 0, 'POINT', 0, 'COMMA') + 'đ' : '0đ'}">
+                                    17.490.000đ
+                                </div>
+                                <div th:if="${item.savingsPerUnit != null and item.savingsPerUnit.compareTo(T(java.math.BigDecimal).ZERO) > 0}"
+                                     class="text-[10px] font-medium text-emerald-600 tabular-nums">
+                                    Tiết kiệm <span th:text="${#numbers.formatDecimal(item.savingsPerUnit.multiply(T(java.math.BigDecimal).valueOf(item.quantity)), 0, 'POINT', 0, 'COMMA') + 'đ'}"></span>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center gap-3">
+                                <div class="inline-flex items-center border border-zinc-300 bg-white">
+                                    <form th:action="@{/cart/update}" method="post" class="inline">
+                                        <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                                        <input type="hidden" name="variantId" th:value="${item.variantId}">
+                                        <input type="hidden" name="quantity" th:value="${item.quantity - 1}">
+                                        <button type="submit"
+                                                class="w-7 h-7 flex items-center justify-center text-zinc-600 hover:bg-zinc-100 hover:text-zinc-950 transition-colors">
+                                            <i class="fa-solid fa-minus text-[10px]"></i>
+                                        </button>
+                                    </form>
+
+                                    <span th:text="${item.quantity}"
+                                          class="w-9 text-center text-xs font-bold tabular-nums select-none">1</span>
+
+                                    <form th:action="@{/cart/update}" method="post" class="inline">
+                                        <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                                        <input type="hidden" name="variantId" th:value="${item.variantId}">
+                                        <input type="hidden" name="quantity" th:value="${item.quantity + 1}">
+                                        <button type="submit"
+                                                class="w-7 h-7 flex items-center justify-center text-zinc-600 hover:bg-zinc-100 hover:text-zinc-950 transition-colors">
+                                            <i class="fa-solid fa-plus text-[10px]"></i>
+                                        </button>
+                                    </form>
+                                </div>
+
+                                <form th:action="@{/cart/remove}" method="post" class="inline">
+                                    <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                                    <input type="hidden" name="variantId" th:value="${item.variantId}">
+                                    <button type="submit"
+                                            title="Xóa sản phẩm"
+                                            class="w-7 h-7 flex items-center justify-center text-zinc-400 hover:text-red-600 transition-colors">
+                                        <i class="fa-solid fa-trash-can text-xs"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Khối Voucher & Ưu đãi Học sinh - Sinh viên (UI tạm thời, logic xử lý ở bước sau) -->
+                <div class="bg-white border border-zinc-200 p-5 sm:p-6 space-y-4">
+                    <div class="flex items-center justify-between border-b border-zinc-200 pb-3">
+                        <h2 class="text-xs font-extrabold uppercase tracking-wider text-zinc-950 flex items-center gap-2">
+                            <i class="fa-solid fa-ticket text-blue-600"></i>
+                            <span>Voucher & Chương trình ưu đãi</span>
+                        </h2>
+                        <span class="text-[11px] text-zinc-500">Áp dụng trên giỏ hàng hiện tại</span>
+                    </div>
+
+                    <!-- Checkbox 1: Áp dụng Voucher -->
+                    <div class="border border-zinc-200 bg-zinc-50/60 p-3.5 transition-colors">
+                        <label for="useVoucherCheckbox" class="flex items-start gap-3 cursor-pointer select-none">
+                            <input id="useVoucherCheckbox"
+                                   type="checkbox"
+                                   name="applyVoucher"
+                                   onchange="toggleVoucherInput(this)"
+                                   class="mt-0.5 h-4 w-4 rounded border-zinc-300 text-blue-600 focus:ring-blue-600">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex flex-wrap items-center justify-between gap-2">
+                                    <span class="text-xs font-bold text-zinc-900">
+                                        Áp dụng mã Voucher / Mã khuyến mãi
+                                    </span>
+                                    <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-zinc-200 text-zinc-700">
+                                        Voucher
+                                    </span>
+                                </div>
+                                <p class="text-[11px] text-zinc-500 mt-1 leading-relaxed">
+                                    <strong class="text-zinc-700">Note:</strong> Tích chọn để nhập mã giảm giá hiện có (ví dụ: Voucher 500K mua Robot hút bụi lau nhà, Tivi, Tủ lạnh, Máy giặt phát qua tin nhắn sau khi mua điện thoại/laptop, hoặc mã ưu đãi khác). Hiện chỉ là giao diện chọn, logic kiểm tra & giảm giá sẽ làm sau.
+                                </p>
+
+                                <div id="voucherInputWrapper" class="hidden mt-3 pt-3 border-t border-zinc-200/80 flex flex-col sm:flex-row gap-2">
+                                    <input id="voucherCodeInput"
+                                           type="text"
+                                           name="voucherCode"
+                                           placeholder="Nhập mã voucher (VD: LAPTOP2026)..."
+                                           class="flex-1 h-9 px-3 text-xs bg-white border border-zinc-300 focus:border-zinc-950 focus:outline-none uppercase">
+                                    <button type="button"
+                                            id="voucherPreviewBtn"
+                                            onclick="handleVoucherPreviewNote()"
+                                            class="h-9 px-4 bg-zinc-950 hover:bg-blue-600 text-white text-[11px] font-bold uppercase tracking-wider transition-colors">
+                                        Kiểm tra mã
+                                    </button>
+                                </div>
+                                <p id="voucherUiStatusNote" class="hidden mt-1.5 text-[11px] text-blue-600 font-medium"></p>
+                            </div>
+                        </label>
+                    </div>
+
+                    <!-- Checkbox 2: Giảm 10% cho Học sinh, Sinh viên -->
+                    <div class="border border-zinc-200 bg-zinc-50/60 p-3.5 transition-colors">
+                        <label for="studentDiscountCheckbox" class="flex items-start gap-3 cursor-pointer select-none">
+                            <input id="studentDiscountCheckbox"
+                                   type="checkbox"
+                                   name="studentDiscount10"
+                                   onchange="toggleStudentNote(this)"
+                                   class="mt-0.5 h-4 w-4 rounded border-zinc-300 text-blue-600 focus:ring-blue-600">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex flex-wrap items-center justify-between gap-2">
+                                    <span class="text-xs font-bold text-zinc-900">
+                                        Ưu đãi giảm <span class="text-blue-600">5%</span> dành cho Học sinh, Sinh viên
+                                    </span>
+                                    <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-blue-100 text-blue-700">
+                                        -5% HSSV (tối đa: 1.000.000đ)
+                                    </span>
+                                </div>
+                                <p class="text-[11px] text-zinc-500 mt-1 leading-relaxed">
+                                    <strong class="text-zinc-700">Note:</strong> Dành cho học sinh, sinh viên có thẻ học sinh/sinh viên hoặc email/giấy tờ xác thực hợp lệ. Tích chọn để đánh dấu nhu cầu áp dụng ưu đãi 10% — logic tính giảm giá và quy tắc áp dụng sẽ làm sau.
+                                </p>
+                                <p id="studentUiStatusNote" class="hidden mt-1.5 text-[11px] text-emerald-700 font-medium"></p>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cột phải: Tóm tắt thanh toán (4 cột) -->
+            <div class="lg:col-span-4 bg-white border border-zinc-200 p-6 sticky top-24">
+                <h2 class="text-sm font-bold uppercase tracking-wider text-zinc-950 pb-4 border-b border-zinc-200">
+                    Tóm tắt đơn hàng
+                </h2>
+
+                <div class="py-4 space-y-3 text-sm border-b border-zinc-200">
+                    <div class="flex items-center justify-between text-zinc-600">
+                        <span>Tạm tính (<span th:text="${totalQuantity != null ? totalQuantity : 0}">0</span> sản phẩm)</span>
+                        <span class="font-semibold text-zinc-900 tabular-nums"
+                              th:text="${totalAmount != null ? #numbers.formatDecimal(totalAmount, 0, 'POINT', 0, 'COMMA') + 'đ' : '0đ'}">
+                        </span>
+                    </div>
+
+                    <div th:if="${totalSavings != null and totalSavings.compareTo(T(java.math.BigDecimal).ZERO) > 0}"
+                         class="flex items-center justify-between text-emerald-600">
+                        <span>Ưu đãi tiết kiệm</span>
+                        <span class="font-semibold tabular-nums"
+                              th:text="'-' + ${#numbers.formatDecimal(totalSavings, 0, 'POINT', 0, 'COMMA')} + 'đ'">
+                        </span>
+                    </div>
+
+                    <div class="flex items-center justify-between text-zinc-600">
+                        <span>Phí vận chuyển</span>
+                        <span class="font-semibold text-emerald-600">Miễn phí</span>
+                    </div>
+                </div>
+
+                <div class="py-4 flex items-baseline justify-between">
+                    <span class="text-sm font-bold text-zinc-950">Tổng thanh toán</span>
+                    <div class="text-right">
+                        <div class="text-2xl font-extrabold text-blue-600 tabular-nums"
+                             th:text="${totalAmount != null ? #numbers.formatDecimal(totalAmount, 0, 'POINT', 0, 'COMMA') + 'đ' : '0đ'}">
+                        </div>
+                        <span class="text-[11px] text-zinc-500">(Đã bao gồm VAT)</span>
+                    </div>
+                </div>
+
+                <a th:href="@{/checkout}"
+                   class="w-full h-12 mt-2 bg-zinc-950 hover:bg-blue-600 text-white text-xs font-bold uppercase tracking-wider transition-colors flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-shield-halved"></i> Tiến hành đặt hàng
+                </a>
+
+                <div class="mt-5 pt-4 border-t border-zinc-100 space-y-2 text-xs text-zinc-500">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-circle-check text-emerald-600"></i>
+                        <span>Bảo hành chính hãng 24 tháng toàn quốc</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-circle-check text-emerald-600"></i>
+                        <span>Lỗi 1 đổi 1 trong 30 ngày đầu tiên</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- JS xử lý ẩn toast và trạng thái ghi chú giao diện tạm thời -->
+    <script>
+        const cartToast = document.getElementById('cartToast');
+        if (cartToast) {
+            setTimeout(() => {
+                cartToast.classList.add('opacity-0');
+                setTimeout(() => cartToast.remove(), 300);
+            }, 3000);
+        }
+
+        function toggleVoucherInput(checkbox) {
+            const wrapper = document.getElementById('voucherInputWrapper');
+            const statusNote = document.getElementById('voucherUiStatusNote');
+            if (!wrapper) return;
+
+            if (checkbox.checked) {
+                wrapper.classList.remove('hidden');
+                if (statusNote) {
+                    statusNote.textContent = 'Note: Đang bật chế độ nhập voucher (chưa áp dụng tính giá tự động).';
+                    statusNote.classList.remove('hidden');
+                }
+            } else {
+                wrapper.classList.add('hidden');
+                if (statusNote) {
+                    statusNote.textContent = '';
+                    statusNote.classList.add('hidden');
+                }
+            }
+        }
+
+        function handleVoucherPreviewNote() {
+            const input = document.getElementById('voucherCodeInput');
+            const statusNote = document.getElementById('voucherUiStatusNote');
+            if (!statusNote) return;
+
+            const code = (input?.value || '').trim();
+            statusNote.textContent = code
+                ? `Note: Đã ghi nhận mã "${code.toUpperCase()}" trên giao diện — logic kiểm tra & giảm giá sẽ làm sau.`
+                : 'Note: Vui lòng nhập mã voucher trước khi kiểm tra (logic xử lý sẽ làm sau).';
+            statusNote.classList.remove('hidden');
+        }
+
+        function toggleStudentNote(checkbox) {
+            const studentNote = document.getElementById('studentUiStatusNote');
+            if (!studentNote) return;
+
+            if (checkbox.checked) {
+                studentNote.textContent = 'Note: Đã chọn ưu đãi giảm 10% Học sinh/Sinh viên trên giao diện — logic giảm giá sẽ làm sau.';
+                studentNote.classList.remove('hidden');
+            } else {
+                studentNote.textContent = '';
+                studentNote.classList.add('hidden');
+            }
+        }
+    </script>
+</body>
+</html>

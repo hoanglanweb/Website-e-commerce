@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thêm sản phẩm mới | Electronics Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body class="bg-zinc-50 text-zinc-950 antialiased min-h-screen flex flex-col">
+
+    <!-- Topbar -->
+    <header class="bg-white border-b border-zinc-200 h-16 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-20">
+        <div class="flex items-center gap-3 sm:gap-4">
+            <a th:href="@{/admin}" class="text-base sm:text-lg font-extrabold tracking-tight uppercase">
+                ELECTRONICS<span class="text-blue-600">.ADMIN</span>
+            </a>
+            <span class="text-zinc-300">/</span>
+            <span class="text-xs font-bold uppercase tracking-wider text-zinc-600">
+                Thêm sản phẩm mới
+            </span>
+        </div>
+
+        <a th:href="@{/admin/products}"
+           class="text-xs font-semibold uppercase tracking-wider text-zinc-600 hover:text-zinc-950 inline-flex items-center gap-1.5">
+            <i class="fa-solid fa-arrow-left text-[11px]"></i>
+            <span>Danh sách sản phẩm</span>
+        </a>
+    </header>
+
+    <!-- Main form -->
+    <main class="flex-1 max-w-5xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+        <div class="bg-white border border-zinc-200">
+            <div class="px-6 py-4 border-b border-zinc-200 flex items-center justify-between">
+                <div>
+                    <h1 class="text-lg font-bold tracking-tight text-zinc-950">
+                        Thêm sản phẩm mới
+                    </h1>
+                    <p class="text-xs text-zinc-500 mt-0.5">
+                        Nhập thông tin sản phẩm, số lượng tồn kho ban đầu, 12 thông số kỹ thuật, bài giới thiệu và hình ảnh hiển thị.
+                    </p>
+                </div>
+                <span class="px-2.5 py-1 text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+                    Tạo mới
+                </span>
+            </div>
+
+            <form th:action="@{/admin/products/save}"
+                  th:object="${product}"
+                  method="post"
+                  class="p-6 space-y-7 text-xs">
+
+                <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <input type="hidden" th:field="*{id}"/>
+
+                <!-- 1. THÔNG TIN CƠ BẢN -->
+                <section class="space-y-4">
+                    <h2 class="text-xs font-extrabold uppercase tracking-wider text-zinc-950 pb-2 border-b border-zinc-200">
+                        1. Thông tin cơ bản & định danh
+                    </h2>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label for="productCode" class="block font-bold uppercase tracking-wider text-zinc-700 mb-1.5">
+                                Mã sản phẩm / Model <span class="text-red-600">*</span>
+                            </label>
+                            <input id="productCode"
+                                   type="text"
+                                   th:field="*{productCode}"
+                                   required
+                                   placeholder="VD: G614PM-TS147W"
+                                   class="w-full h-10 px-3 border border-zinc-300 focus:border-zinc-950 focus:outline-none font-mono">
+                        </div>
+
+                        <div>
+                            <label for="slug" class="block font-bold uppercase tracking-wider text-zinc-700 mb-1.5">
+                                Slug URL
+                            </label>
+                            <input id="slug"
+                                   type="text"
+                                   th:field="*{slug}"
+                                   placeholder="Để trống để tự động tạo từ tên sản phẩm"
+                                   class="w-full h-10 px-3 border border-zinc-300 focus:border-zinc-950 focus:outline-none">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="productName" class="block font-bold uppercase tracking-wider text-zinc-700 mb-1.5">
+                            Tên sản phẩm <span class="text-red-600">*</span>
+                        </label>
+                        <input id="productName"
+                               type="text"
+                               th:field="*{productName}"
+                               required
+                               placeholder="VD: ASUS ROG Strix G16 G614PM-TS147W"
+                               class="w-full h-10 px-3 border border-zinc-300 focus:border-zinc-950 focus:outline-none">
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                        <div>
+                            <label for="categorySelect" class="block font-bold uppercase tracking-wider text-zinc-700 mb-1.5">
+                                Danh mục <span class="text-red-600">*</span>
+                            </label>
+                            <select id="categorySelect"
+                                    th:field="*{category.id}"
+                                    required
+                                    class="w-full h-10 px-3 bg-white border border-zinc-300 focus:border-zinc-950 focus:outline-none font-semibold">
+                                <option value="">-- Chọn danh mục --</option>
+                                <option th:each="cat : ${categories}"
+                                        th:value="${cat.id}"
+                                        th:text="${cat.categoryName}">
+                                    Danh mục
+                                </option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="brandSelect" class="block font-bold uppercase tracking-wider text-zinc-700 mb-1.5">
+                                Thương hiệu <span class="text-red-600">*</span>
+                            </label>
+                            <select id="brandSelect"
+                                    th:field="*{brand.id}"
+                                    required
+                                    class="w-full h-10 px-3 bg-white border border-zinc-300 focus:border-zinc-950 focus:outline-none font-semibold">
+                                <option value="">-- Chọn thương hiệu --</option>
+                                <option th:each="brand : ${brands}"
+                                        th:value="${brand.id}"
+                                        th:text="${brand.brandName}">
+                                    Thương hiệu
+                                </option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="basePrice" class="block font-bold uppercase tracking-wider text-zinc-700 mb-1.5">
+                                Giá cơ bản (VNĐ)
+                            </label>
+                            <input id="basePrice"
+                                   type="number"
+                                   step="1000"
+                                   min="0"
+                                   th:field="*{basePrice}"
+                                   placeholder="57990000"
+                                   class="w-full h-10 px-3 border border-zinc-300 focus:border-zinc-950 focus:outline-none tabular-nums">
+                        </div>
+
+                        <div>
+                            <label for="stockQuantity" class="block font-bold uppercase tracking-wider text-zinc-700 mb-1.5">
+                                <span th:text="${product.id != null ? 'Tồn kho hiện tại (máy)' : 'Số lượng '}">
+                                    Số lượng nhập kho 
+                                </span>
+                            </label>
+                            <input id="stockQuantity"
+                                type="number"
+                                name="stockQuantity"
+                                min="0"
+                                step="1"
+                                th:value="${product.id != null ? (stockQuantity != null ? stockQuantity : 0) : (stockQuantity != null ? stockQuantity : 0)}"
+                                placeholder="0"
+                                class="w-full h-10 px-3 border border-zinc-300 focus:border-zinc-950 focus:outline-none tabular-nums font-mono">
+                            <p class="text-[11px] text-zinc-500 mt-1"
+                            th:text="${product.id != null ? 'Đang hiển thị số máy tồn kho thực tế trong DB (0 = hết hàng). Có thể chỉnh trực tiếp tại đây.' : 'Nhập số lượng sản phẩm nhập về kho để lưu vào cơ sở dữ liệu.'}">
+                                Nhập số lượng sản phẩm nhập về kho để lưu vào cơ sở dữ liệu.
+                            </p>
+                        </div>
+
+                        <div>
+                            <label for="status" class="block font-bold uppercase tracking-wider text-zinc-700 mb-1.5">
+                                Trạng thái hiển thị
+                            </label>
+                            <select id="status"
+                                    th:field="*{status}"
+                                    class="w-full h-10 px-3 bg-white border border-zinc-300 focus:border-zinc-950 focus:outline-none font-semibold">
+                                <option th:value="true">Hiển thị ngay</option>
+                                <option th:value="false">Lưu dạng ẩn</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <p class="text-[11px] text-zinc-500">
+                        Số lượng tồn kho ban đầu (máy) sẽ được khởi tạo vào biến thể của sản phẩm và hiển thị ở trang danh sách quản trị cũng như trang chi tiết.
+                    </p>
+
+                    <div>
+                        <label for="configurationSummary" class="block font-bold uppercase tracking-wider text-zinc-700 mb-1.5">
+                            Cấu hình tóm tắt (dùng cho thẻ sản phẩm & tìm kiếm)
+                        </label>
+                        <input id="configurationSummary"
+                               type="text"
+                               th:field="*{configurationSummary}"
+                               placeholder="VD: Ryzen 9 8940HX | RTX 5070 8GB | 16GB DDR5 | 1TB SSD | 16.0 QHD+ 240Hz"
+                               class="w-full h-10 px-3 border border-zinc-300 focus:border-zinc-950 focus:outline-none">
+                    </div>
+                </section>
+
+                <!-- 2. THÔNG SỐ KỸ THUẬT CHI TIẾT (12 MỤC CHUẨN) -->
+                <section class="space-y-4">
+                    <h2 class="text-xs font-extrabold uppercase tracking-wider text-zinc-950 pb-2 border-b border-zinc-200">
+                        2. Thông số kỹ thuật chi tiết (12 mục)
+                    </h2>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label for="specGpu" class="block font-bold uppercase tracking-wider text-zinc-700 mb-1.5">
+                                1. Loại card đồ họa
+                            </label>
+                            <input id="specGpu"
+                                   type="text"
+                                   name="specGpu"
+                                   th:value="${specGpu}"
+                                   placeholder="VD: NVIDIA GeForce RTX 5070 8GB GDDR7 (MUX Switch + NVIDIA Advanced Optimus)"
+                                   class="w-full h-10 px-3 border border-zinc-300 focus:border-zinc-950 focus:outline-none">
+                        </div>
+
+                        <div>
+                            <label for="specRamCapacity" class="block font-bold uppercase tracking-wider text-zinc-700 mb-1.5">
+                                2. Dung lượng RAM
+                            </label>
+                            <input id="specRamCapacity"
+                                   type="text"
+                                   name="specRamCapacity"
+                                   th:value="${specRamCapacity}"
+                                   placeholder="VD: 16GB"
+                                   class="w-full h-10 px-3 border border-zinc-300 focus:border-zinc-950 focus:outline-none">
+                        </div>
+
+                        <div>
+                            <label for="specRamType" class="block font-bold uppercase tracking-wider text-zinc-700 mb-1.5">
+                                3. Loại RAM
+                            </label>
+                            <input id="specRamType"
+                                   type="text"
+                                   name="specRamType"
+                                   th:value="${specRamType}"
+                                   placeholder="VD: DDR5 5200 MHz"
+                                   class="w-full h-10 px-3 border border-zinc-300 focus:border-zinc-950 focus:outline-none">
+                        </div>
+
+                        <div>
+                            <label for="specRamSlots" class="block font-bold uppercase tracking-wider text-zinc-700 mb-1.5">
+                                4. Số khe RAM
+                            </label>
+                            <input id="specRamSlots"
+                                   type="text"
+                                   name="specRamSlots"
+                                   th:value="${specRamSlots}"
+                                   placeholder="VD: 2 khe SO-DIMM (nâng cấp tối đa 64GB)"
+                                   class="w-full h-10 px-3 border border-zinc-300 focus:border-zinc-950 focus:outline-none">
+                        </div>
+
+                        <div>
+                            <label for="specStorage" class="block font-bold uppercase tracking-wider text-zinc-700 mb-1.5">
+                                5. Ổ cứng
+                            </label>
+                            <input id="specStorage"
+                                   type="text"
+                                   name="specStorage"
+                                   th:value="${specStorage}"
+                                   placeholder="VD: 1TB PCIe 4.0 NVMe M.2 SSD (2 khe M.2)"
+                                   class="w-full h-10 px-3 border border-zinc-300 focus:border-zinc-950 focus:outline-none">
+                        </div>
+
+                        <div>
+                            <label for="specOs" class="block font-bold uppercase tracking-wider text-zinc-700 mb-1.5">
+                                7. Hệ điều hành khi ra mắt
+                            </label>
+                            <input id="specOs"
+                                   type="text"
+                                   name="specOs"
+                                   th:value="${specOs}"
+                                   placeholder="VD: Windows 11 Home bản quyền"
+                                   class="w-full h-10 px-3 border border-zinc-300 focus:border-zinc-950 focus:outline-none">
+                        </div>
+
+                        <div class="sm:col-span-2">
+                            <label for="specCpu" class="block font-bold uppercase tracking-wider text-zinc-700 mb-1.5">
+                                8. Loại CPU
+                            </label>
+                            <input id="specCpu"
+                                   type="text"
+                                   name="specCpu"
+                                   th:value="${specCpu}"
+                                   placeholder="VD: AMD Ryzen 9 8940HX (16 lõi / 32 luồng, 2.4 GHz - 5.3 GHz, 80 MB Cache)"
+                                   class="w-full h-10 px-3 border border-zinc-300 focus:border-zinc-950 focus:outline-none">
+                        </div>
+
+                        <div>
+                            <label for="specDisplaySize" class="block font-bold uppercase tracking-wider text-zinc-700 mb-1.5">
+                                9. Kích thước màn hình
+                            </label>
+                            <input id="specDisplaySize"
+                                   type="text"
+                                   name="specDisplaySize"
+                                   th:value="${specDisplaySize}"
+                                   placeholder="VD: 16.0 inches"
+                                   class="w-full h-10 px-3 border border-zinc-300 focus:border-zinc-950 focus:outline-none">
+                        </div>
+
+                        <div>
+                            <label for="specDisplayResolution" class="block font-bold uppercase tracking-wider text-zinc-700 mb-1.5">
+                                10. Độ phân giải màn hình
+                            </label>
+                            <input id="specDisplayResolution"
+                                   type="text"
+                                   name="specDisplayResolution"
+                                   th:value="${specDisplayResolution}"
+                                   placeholder="VD: 2560 x 1600 pixels (QHD+)"
+                                   class="w-full h-10 px-3 border border-zinc-300 focus:border-zinc-950 focus:outline-none">
+                        </div>
+
+                        <div>
+                            <label for="specDisplayTech" class="block font-bold uppercase tracking-wider text-zinc-700 mb-1.5">
+                                6. Công nghệ màn hình
+                            </label>
+                            <textarea id="specDisplayTech"
+                                      rows="3"
+                                      name="specDisplayTech"
+                                      th:text="${specDisplayTech}"
+                                      placeholder="ROG Nebula Display IPS 240Hz
+                                                    Độ phủ màu 100% DCI-P3, độ sáng 500 nits
+                                                    Thời gian phản hồi 3ms"
+                                      class="w-full p-2.5 border border-zinc-300 focus:border-zinc-950 focus:outline-none"></textarea>
+                        </div>
+
+                        <div>
+                            <label for="specBattery" class="block font-bold uppercase tracking-wider text-zinc-700 mb-1.5">
+                                11. Pin
+                            </label>
+                            <textarea id="specBattery"
+                                      rows="3"
+                                      name="specBattery"
+                                      th:text="${specBattery}"
+                                      placeholder="Pin Li-ion 4 cell 90Wh Sạc AC 280W"
+                                      class="w-full p-2.5 border border-zinc-300 focus:border-zinc-950 focus:outline-none"></textarea>
+                        </div>
+
+                        <div class="sm:col-span-2">
+                            <label for="specPorts" class="block font-bold uppercase tracking-wider text-zinc-700 mb-1.5">
+                                12. Cổng giao tiếp
+                            </label>
+                            <textarea id="specPorts"
+                                      rows="3"
+                                      name="specPorts"
+                                      th:text="${specPorts}"
+                                      placeholder="2x USB 3.2 Gen 2 Type-C (Hỗ trợ DisplayPort / Power Delivery)
+                                                    2x USB 3.2 Gen 2 Type-A
+                                                    1x HDMI 2.1 FRL
+                                                    1x RJ-45 Gigabit LAN
+                                                    1x Jack tai nghe/mic 3.5mm"
+                                      class="w-full p-2.5 border border-zinc-300 focus:border-zinc-950 focus:outline-none"></textarea>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 3. ĐẶC ĐIỂM NỔI BẬT & BÀI GIỚI THIỆU / ĐÁNH GIÁ -->
+                <section class="space-y-4">
+                    <h2 class="text-xs font-extrabold uppercase tracking-wider text-zinc-950 pb-2 border-b border-zinc-200">
+                        3. Đặc điểm nổi bật, giới thiệu & đánh giá chi tiết
+                    </h2>
+
+                    <div>
+                        <label for="highlights" class="block font-bold uppercase tracking-wider text-zinc-700 mb-1.5">
+                            Đặc điểm nổi bật (mỗi dòng một ý)
+                        </label>
+                        <textarea id="highlights"
+                                  rows="4"
+                                  name="highlights"
+                                  th:text="${highlights}"
+                                  placeholder="- Hiệu năng thi đấu đỉnh cao với AMD Ryzen 9 8940HX 16 nhân 32 luồng
+                                                - Công nghệ tản nhiệt 3 quạt Tri-Fan sử dụng keo kim loại lỏng Conductonaut Extreme
+                                                - Màn hình 16 inch tỷ lệ 16:10 viền siêu mỏng
+                                                - Dải đèn LED gầm Aura Sync đặc trưng dòng ROG Strix"
+                                  class="w-full p-3 border border-zinc-300 focus:border-zinc-950 focus:outline-none"></textarea>
+                    </div>
+
+                    <div>
+                        <label for="introOverview" class="block font-bold uppercase tracking-wider text-zinc-700 mb-1.5">
+                            Giới thiệu tổng quan sản phẩm
+                        </label>
+                        <textarea id="introOverview"
+                                  rows="4"
+                                  name="introOverview"
+                                  th:text="${introOverview}"
+                                  placeholder="Mô tả tổng quan thiết kế, sức mạnh xử lý, tản nhiệt, màn hình..."
+                                  class="w-full p-3 border border-zinc-300 focus:border-zinc-950 focus:outline-none"></textarea>
+                    </div>
+
+                    <div>
+                        <label for="detailedReview" class="block font-bold uppercase tracking-wider text-zinc-700 mb-1.5">
+                            Đánh giá chi tiết thiết kế & trải nghiệm thực tế
+                        </label>
+                        <textarea id="detailedReview"
+                                  rows="6"
+                                  name="detailedReview"
+                                  th:text="${detailedReview}"
+                                  placeholder="1. Thiết kế và độ hoàn thiện: ...
+                                                2. Hiệu năng xử lý thực tế: ...
+                                                3. Màn hình, bàn phím và thời lượng sử dụng: ..."
+                                  class="w-full p-3 border border-zinc-300 focus:border-zinc-950 focus:outline-none"></textarea>
+                    </div>
+                </section>
+
+                <!-- 4. HÌNH ẢNH ĐẠI DIỆN TRANG CHỦ & THƯ VIỆN ẢNH PHỤ -->
+                <section class="space-y-4">
+                    <h2 class="text-xs font-extrabold uppercase tracking-wider text-zinc-950 pb-2 border-b border-zinc-200">
+                        4. Hình ảnh đại diện trang chủ & thư viện ảnh phụ (góc nhìn khác)
+                    </h2>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-12 gap-4 items-start">
+                        <div class="sm:col-span-3">
+                            <label class="block font-bold uppercase tracking-wider text-zinc-700 mb-1.5">
+                                Xem trước ảnh trang chủ
+                            </label>
+                            <div class="aspect-square w-full bg-zinc-100 border border-zinc-300 flex items-center justify-center overflow-hidden">
+                                <img id="primaryImagePreview"
+                                     th:src="${primaryImageUrl != null and !#strings.isEmpty(primaryImageUrl) ? primaryImageUrl : ''}"
+                                     alt="Xem trước ảnh đại diện"
+                                     th:class="${primaryImageUrl != null and !#strings.isEmpty(primaryImageUrl) ? 'w-full h-full object-cover' : 'hidden w-full h-full object-cover'}"
+                                     onerror="this.classList.add('hidden'); document.getElementById('primaryImagePlaceholder').classList.remove('hidden');">
+                                <span id="primaryImagePlaceholder"
+                                      th:class="${primaryImageUrl != null and !#strings.isEmpty(primaryImageUrl) ? 'hidden text-[11px] text-zinc-400 text-center px-2' : 'text-[11px] text-zinc-400 text-center px-2'}">
+                                    Chưa có ảnh đại diện
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="sm:col-span-9 space-y-4">
+                            <div>
+                                <label for="primaryImageUrl" class="block font-bold uppercase tracking-wider text-zinc-700 mb-1.5">
+                                    URL ảnh đại diện hiển thị trên trang chủ <span class="text-blue-600">(Ảnh chính #1)</span>
+                                </label>
+                                <input id="primaryImageUrl"
+                                       type="text"
+                                       name="primaryImageUrl"
+                                       th:value="${primaryImageUrl}"
+                                       oninput="updatePrimaryPreview(this.value)"
+                                       placeholder="/images/products/g614pm-main.jpg hoặc https://..."
+                                       class="w-full h-10 px-3 border border-zinc-300 focus:border-zinc-950 focus:outline-none">
+                            </div>
+
+                            <div>
+                                <label for="galleryImageUrls" class="block font-bold uppercase tracking-wider text-zinc-700 mb-1.5">
+                                    Thư viện ảnh phụ — góc nhìn khác (mỗi dòng hoặc cách nhau bởi dấu phẩy)
+                                </label>
+                                <textarea id="galleryImageUrls"
+                                          rows="3"
+                                          name="galleryImageUrls"
+                                          th:text="${galleryImageUrls}"
+                                          oninput="renderGalleryPreview(this.value)"
+                                          placeholder="/images/products/g614pm-angle-2.jpg
+                                                        /images/products/g614pm-angle-3.jpg
+                                                        /images/products/g614pm-angle-4.jpg"
+                                          class="w-full p-2.5 border border-zinc-300 focus:border-zinc-950 focus:outline-none"></textarea>
+                                <p class="text-[11px] text-zinc-500 mt-1">
+                                    Ảnh chính lưu <code>is_primary = true, display_order = 1</code>; các ảnh phụ lưu <code>is_primary = false, display_order = 2, 3, ...</code> cho thumbnail & thư viện ảnh thực tế.
+                                </p>
+                            </div>
+
+                            <div>
+                                <label class="block font-bold uppercase tracking-wider text-zinc-700 mb-1.5">
+                                    Xem trước thư viện ảnh phụ
+                                </label>
+                                <div id="galleryPreviewGrid" class="grid grid-cols-2 sm:grid-cols-4 gap-2.5"></div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Actions -->
+                <div class="pt-5 border-t border-zinc-200 flex items-center justify-end gap-3">
+                    <a th:href="@{/admin/products}"
+                       class="h-10 px-4 border border-zinc-300 hover:border-zinc-950 text-zinc-700 font-bold uppercase tracking-wider inline-flex items-center">
+                        Hủy
+                    </a>
+                    <button type="submit"
+                            class="h-10 px-5 bg-zinc-950 hover:bg-blue-600 text-white font-bold uppercase tracking-wider inline-flex items-center gap-2 transition-colors">
+                        <i class="fa-solid fa-plus"></i>
+                        <span>Tạo sản phẩm</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </main>
+</body>
+<script>
+    function updatePrimaryPreview(url) {
+        const img = document.getElementById('primaryImagePreview');
+        const placeholder = document.getElementById('primaryImagePlaceholder');
+        if (!img || !placeholder) return;
+        const trimmed = (url || '').trim();
+        if (!trimmed) {
+            img.src = '';
+            img.classList.add('hidden');
+            placeholder.classList.remove('hidden');
+            return;
+        }
+        img.src = trimmed;
+        img.classList.remove('hidden');
+        placeholder.classList.add('hidden');
+    }
+
+    function renderGalleryPreview(rawValue) {
+        const grid = document.getElementById('galleryPreviewGrid');
+        if (!grid) return;
+        const urls = (rawValue || '')
+            .split(/[,\r\n]+/)
+            .map(s => s.trim())
+            .filter(Boolean);
+
+        if (urls.length === 0) {
+            grid.innerHTML = '<div class="col-span-full text-[11px] text-zinc-400">Chưa có ảnh phụ nào được nhập.</div>';
+            return;
+        }
+
+        grid.innerHTML = urls.map((url, idx) => `
+            <div class="border border-zinc-200 bg-zinc-50 p-1.5 flex flex-col items-center">
+                <div class="aspect-[4/3] w-full bg-white flex items-center justify-center overflow-hidden">
+                    <img src="${url}"
+                         alt="Ảnh phụ ${idx + 2}"
+                         class="w-full h-full object-contain"
+                         onerror="this.parentElement.innerHTML='<span class=\\'text-[10px] text-red-500 px-1 text-center\\'>Lỗi tải ảnh</span>'">
+                </div>
+                <span class="mt-1 text-[10px] font-medium text-zinc-600 truncate w-full text-center">Ảnh phụ #${idx + 2}</span>
+            </div>
+        `).join('');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const galleryEl = document.getElementById('galleryImageUrls');
+        if (galleryEl) {
+            renderGalleryPreview(galleryEl.value);
+        }
+    });
+</script>
+</html>

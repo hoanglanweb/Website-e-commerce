@@ -1,0 +1,11 @@
+{
+ "page": null,
+ "url": "http://localhost:8080/",
+ "root": null,
+ "kind": "product",
+ "category": "Laptop from MSI, ACER, ASUS and LENOVO",
+ "primary": "Xem laptop",
+ "rounds": 3,
+ "start": "2026-11-17T12:21:17.465Z",
+ "by": "gate.mjs --start"
+}

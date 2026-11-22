@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Hãng & Danh mục - Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body class="bg-zinc-50 text-zinc-900 min-h-screen flex flex-col">
+
+    <!-- Topbar -->
+    <header class="h-14 bg-white border-b border-zinc-200 px-4 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <span class="font-extrabold tracking-tight text-base uppercase">Laptop Admin</span>
+            <span class="text-zinc-300">/</span>
+            <span class="text-xs font-semibold text-zinc-600 uppercase">Hãng & Danh mục</span>
+        </div>
+        <a th:href="@{/admin}" class="text-xs font-semibold text-zinc-600 hover:text-zinc-950">
+            <i class="fa-solid fa-arrow-left mr-1"></i> Về Tổng quan
+        </a>
+    </header>
+
+    <div class="flex flex-1 min-h-0">
+        <!-- Sidebar -->
+        <aside th:replace="~{Admin/fragments/admin-sidebar :: sidebar('catalog')}"></aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-6 space-y-6">
+           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                    <h1 class="text-xl font-bold text-zinc-950">Quản lý Hãng & Danh mục</h1>
+                    <p class="text-xs text-zinc-500 mt-0.5">Thêm, sửa, xóa hãng laptop (MSI, Acer, Lenovo, ASUS...) và danh mục sản phẩm</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button"
+                            onclick="openBrandModal()"
+                            class="h-9 px-3.5 bg-zinc-950 text-white text-xs font-bold uppercase tracking-wider hover:bg-zinc-800 transition-colors">
+                        <i class="fa-solid fa-plus mr-1"></i> Thêm hãng
+                    </button>
+                    <button type="button"
+                            onclick="openCategoryModal()"
+                            class="h-9 px-3.5 bg-blue-600 text-white text-xs font-bold uppercase tracking-wider hover:bg-blue-700 transition-colors">
+                        <i class="fa-solid fa-plus mr-1"></i> Thêm danh mục
+                    </button>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Bảng Hãng -->
+                <section class="bg-white border border-zinc-200">
+                    <div class="px-4 py-3 border-b border-zinc-200 flex items-center justify-between">
+                        <h2 class="text-sm font-bold uppercase tracking-wider text-zinc-800">Hãng sản xuất</h2>
+                        <span class="text-xs text-zinc-500" th:text="${#lists.size(brands)} + ' hãng'">0 hãng</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-zinc-100 text-zinc-600 uppercase border-b border-zinc-200">
+                                <tr>
+                                    <th class="py-2.5 px-3">ID</th>
+                                    <th class="py-2.5 px-3">Tên hãng</th>
+                                    <th class="py-2.5 px-3">Slug</th>
+                                    <th class="py-2.5 px-3">Trạng thái</th>
+                                    <th class="py-2.5 px-3 text-right">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-zinc-100">
+                                <tr th:if="${#lists.isEmpty(brands)}">
+                                    <td colspan="5" class="py-6 px-4 text-center text-zinc-400">
+                                        Chưa có dữ liệu hãng
+                                    </td>
+                                </tr>
+                                <tr th:each="b : ${brands}" class="hover:bg-zinc-50">
+                                    <td class="py-2.5 px-3 font-mono" th:text="${b.id}">1</td>
+                                    <td class="py-2.5 px-3 font-semibold text-zinc-900" th:text="${b.brandName}">MSI</td>
+                                    <td class="py-2.5 px-3 text-zinc-500" th:text="${b.slug}">msi</td>
+                                    <td class="py-2.5 px-3">
+                                        <span th:if="${b.status}" class="px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-semibold">Hiển thị</span>
+                                        <span th:unless="${b.status}" class="px-2 py-0.5 bg-zinc-100 text-zinc-500 border border-zinc-200 text-[11px] font-semibold">Ẩn</span>
+                                    </td>
+                                    <td class="py-2.5 px-3 text-right whitespace-nowrap">
+                                        <button type="button"
+                                                th:attr="data-id=${b.id},
+                                                         data-name=${b.brandName},
+                                                         data-slug=${b.slug},
+                                                         data-logo=${b.logo},
+                                                         data-desc=${b.description},
+                                                         data-status=${b.status}"
+                                                onclick="editBrandFromBtn(this)"
+                                                class="px-2 py-1 text-[11px] font-semibold border border-zinc-300 text-zinc-700 hover:bg-zinc-100 mr-1">
+                                            Sửa
+                                        </button>
+                                        <form th:action="@{/admin/brands/{id}/delete(id=${b.id})}"
+                                              method="post"
+                                              class="inline"
+                                              onsubmit="return confirm('Xóa hãng này?');">
+                                            <button type="submit"
+                                                    class="px-2 py-1 text-[11px] font-semibold border border-red-200 text-red-600 hover:bg-red-50">
+                                                Xóa
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Bảng Danh mục -->
+                <section class="bg-white border border-zinc-200">
+                    <div class="px-4 py-3 border-b border-zinc-200 flex items-center justify-between">
+                        <h2 class="text-sm font-bold uppercase tracking-wider text-zinc-800">Danh mục laptop</h2>
+                        <span class="text-xs text-zinc-500" th:text="${#lists.size(categories)} + ' danh mục'">0 danh mục</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-zinc-100 text-zinc-600 uppercase border-b border-zinc-200">
+                                <tr>
+                                    <th class="py-2.5 px-3">ID</th>
+                                    <th class="py-2.5 px-3">Tên danh mục</th>
+                                    <th class="py-2.5 px-3">Slug</th>
+                                    <th class="py-2.5 px-3 text-right">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-zinc-100">
+                                <tr th:if="${#lists.isEmpty(categories)}">
+                                    <td colspan="4" class="py-6 px-4 text-center text-zinc-400">
+                                        Chưa có dữ liệu danh mục
+                                    </td>
+                                </tr>
+                                <tr th:each="c : ${categories}" class="hover:bg-zinc-50">
+                                    <td class="py-2.5 px-3 font-mono" th:text="${c.id}">1</td>
+                                    <!-- Đổi c.categoryName thành c.name nếu entity Category dùng field 'name' -->
+                                    <td class="py-2.5 px-3 font-semibold text-zinc-900" th:text="${c.categoryName}">Laptop Gaming</td>
+                                    <td class="py-2.5 px-3 text-zinc-500" th:text="${c.slug}">laptop-gaming</td>
+                                    <td class="py-2.5 px-3 text-right whitespace-nowrap">
+                                        <button type="button"
+                                                th:attr="data-id=${c.id},
+                                                         data-name=${c.categoryName},
+                                                         data-slug=${c.slug}"
+                                                onclick="editCategoryFromBtn(this)"
+                                                class="px-2 py-1 text-[11px] font-semibold border border-zinc-300 text-zinc-700 hover:bg-zinc-100 mr-1">
+                                            Sửa
+                                        </button>
+                                        <form th:action="@{/admin/categories/{id}/delete(id=${c.id})}"
+                                              method="post"
+                                              class="inline"
+                                              onsubmit="return confirm('Xóa danh mục này?');">
+                                            <button type="submit"
+                                                    class="px-2 py-1 text-[11px] font-semibold border border-red-200 text-red-600 hover:bg-red-50">
+                                                Xóa
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+
+
+        <!-- Modal Hãng -->
+        <div id="brandModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
+            <div class="bg-white border border-zinc-200 w-full max-w-md p-5 space-y-4">
+                <div class="flex items-center justify-between border-b border-zinc-200 pb-2.5">
+                    <h3 id="brandModalTitle" class="text-sm font-bold uppercase tracking-wider">Thêm hãng</h3>
+                    <button type="button" onclick="closeBrandModal()" class="text-zinc-400 hover:text-zinc-900">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+                <form th:action="@{/admin/brands/save}" method="post" class="space-y-3 text-xs">
+                    <input type="hidden" name="id" id="brandId">
+                    <div>
+                        <label class="block font-bold text-zinc-700 mb-1">Tên hãng *</label>
+                        <input type="text" name="brandName" id="brandNameInput" required
+                            class="w-full h-9 px-3 border border-zinc-300 focus:outline-none focus:border-zinc-950">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-zinc-700 mb-1">Slug (để trống sẽ tự tạo)</label>
+                        <input type="text" name="slug" id="brandSlugInput"
+                            class="w-full h-9 px-3 border border-zinc-300 focus:outline-none focus:border-zinc-950">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-zinc-700 mb-1">URL Logo</label>
+                        <input type="text" name="logo" id="brandLogoInput"
+                            class="w-full h-9 px-3 border border-zinc-300 focus:outline-none focus:border-zinc-950">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-zinc-700 mb-1">Mô tả</label>
+                        <textarea name="description" id="brandDescInput" rows="2"
+                                class="w-full p-2.5 border border-zinc-300 focus:outline-none focus:border-zinc-950"></textarea>
+                    </div>
+                    <label class="flex items-center gap-2 font-semibold text-zinc-700">
+                        <input type="checkbox" name="status" id="brandStatusInput" value="true" checked>
+                        <span>Hiển thị hãng</span>
+                    </label>
+                    <div class="flex justify-end gap-2 pt-2 border-t border-zinc-100">
+                        <button type="button" onclick="closeBrandModal()"
+                                class="h-9 px-3.5 border border-zinc-300 text-zinc-700 font-semibold">Hủy</button>
+                        <button type="submit"
+                                class="h-9 px-4 bg-zinc-950 text-white font-bold uppercase tracking-wider">Lưu</button>
+                    </div>
+                </form>
+            </div>
+        </div>    
+
+        <!-- Modal Danh mục -->
+        <div id="categoryModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
+            <div class="bg-white border border-zinc-200 w-full max-w-md p-5 space-y-4">
+                <div class="flex items-center justify-between border-b border-zinc-200 pb-2.5">
+                    <h3 id="categoryModalTitle" class="text-sm font-bold uppercase tracking-wider">Thêm danh mục</h3>
+                    <button type="button" onclick="closeCategoryModal()" class="text-zinc-400 hover:text-zinc-900">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+                <form th:action="@{/admin/categories/save}" method="post" class="space-y-3 text-xs">
+                    <input type="hidden" name="id" id="categoryId">
+                    <div>
+                        <label class="block font-bold text-zinc-700 mb-1">Tên danh mục *</label>
+                        <input type="text" name="categoryName" id="categoryNameInput" required
+                            class="w-full h-9 px-3 border border-zinc-300 focus:outline-none focus:border-zinc-950">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-zinc-700 mb-1">Slug (để trống sẽ tự tạo)</label>
+                        <input type="text" name="slug" id="categorySlugInput"
+                            class="w-full h-9 px-3 border border-zinc-300 focus:outline-none focus:border-zinc-950">
+                    </div>
+                    <div class="flex justify-end gap-2 pt-2 border-t border-zinc-100">
+                        <button type="button" onclick="closeCategoryModal()"
+                                class="h-9 px-3.5 border border-zinc-300 text-zinc-700 font-semibold">Hủy</button>
+                        <button type="submit"
+                                class="h-9 px-4 bg-blue-600 text-white font-bold uppercase tracking-wider">Lưu</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </div>
+      <!-- Thông báo flash-->
+        <div th:if="${adminSuccess}"
+                 class="px-4 py-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold"
+                 th:text="${adminSuccess}"></div>
+        <div th:if="${adminError}"
+                 class="px-4 py-3 bg-red-50 border border-red-200 text-red-800 text-xs font-semibold"
+                 th:text="${adminError}"></div>
+    <script>
+        function openBrandModal() {
+            document.getElementById('brandModalTitle').textContent = 'Thêm hãng';
+            document.getElementById('brandId').value = '';
+            document.getElementById('brandNameInput').value = '';
+            document.getElementById('brandSlugInput').value = '';
+            document.getElementById('brandLogoInput').value = '';
+            document.getElementById('brandDescInput').value = '';
+            document.getElementById('brandStatusInput').checked = true;
+            const m = document.getElementById('brandModal');
+            m.classList.remove('hidden');
+            m.classList.add('flex');
+        }
+
+        function editBrandFromBtn(btn) {
+            document.getElementById('brandModalTitle').textContent = 'Sửa hãng #' + btn.dataset.id;
+            document.getElementById('brandId').value = btn.dataset.id || '';
+            document.getElementById('brandNameInput').value = btn.dataset.name || '';
+            document.getElementById('brandSlugInput').value = btn.dataset.slug || '';
+            document.getElementById('brandLogoInput').value = btn.dataset.logo || '';
+            document.getElementById('brandDescInput').value = btn.dataset.desc || '';
+            document.getElementById('brandStatusInput').checked = (btn.dataset.status === 'true');
+            const m = document.getElementById('brandModal');
+            m.classList.remove('hidden');
+            m.classList.add('flex');
+        }
+
+        function closeBrandModal() {
+            const m = document.getElementById('brandModal');
+            m.classList.add('hidden');
+            m.classList.remove('flex');
+        }
+
+        function openCategoryModal() {
+            document.getElementById('categoryModalTitle').textContent = 'Thêm danh mục';
+            document.getElementById('categoryId').value = '';
+            document.getElementById('categoryNameInput').value = '';
+            document.getElementById('categorySlugInput').value = '';
+            const m = document.getElementById('categoryModal');
+            m.classList.remove('hidden');
+            m.classList.add('flex');
+        }
+
+        function editCategoryFromBtn(btn) {
+            document.getElementById('categoryModalTitle').textContent = 'Sửa danh mục #' + btn.dataset.id;
+            document.getElementById('categoryId').value = btn.dataset.id || '';
+            document.getElementById('categoryNameInput').value = btn.dataset.name || '';
+            document.getElementById('categorySlugInput').value = btn.dataset.slug || '';
+            const m = document.getElementById('categoryModal');
+            m.classList.remove('hidden');
+            m.classList.add('flex');
+        }
+
+        function closeCategoryModal() {
+            const m = document.getElementById('categoryModal');
+            m.classList.add('hidden');
+            m.classList.remove('flex');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tổng quan | Electronics Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body class="bg-zinc-50 text-zinc-950 antialiased min-h-screen flex flex-col">
+
+    <!-- Topbar -->
+    <header class="bg-white border-b border-zinc-200 h-16 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-30">
+        <div class="flex items-center gap-3 sm:gap-4">
+            <a th:href="@{/admin}" class="text-base sm:text-lg font-extrabold tracking-tight uppercase">
+                ELECTRONICS<span class="text-blue-600">.ADMIN</span>
+            </a>
+            <span class="text-zinc-300">/</span>
+            <span class="text-xs font-bold uppercase tracking-wider text-zinc-600">
+                Tổng quan hệ thống
+            </span>
+        </div>
+
+        <div class="flex items-center gap-3 sm:gap-4">
+            <a th:href="@{/}"
+               target="_blank"
+               class="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-600 hover:text-zinc-950 transition-colors">
+                <i class="fa-solid fa-up-right-from-square text-[11px]"></i>
+                <span>Xem cửa hàng</span>
+            </a>
+            <a th:href="@{/admin/products/new}"
+               class="h-9 px-4 bg-zinc-950 hover:bg-blue-600 text-white text-xs font-bold uppercase tracking-wider inline-flex items-center gap-1.5 transition-colors">
+                <i class="fa-solid fa-plus text-[11px]"></i>
+                <span>Thêm sản phẩm</span>
+            </a>
+        </div>
+    </header>
+
+    <!-- Toast thông báo -->
+    <div th:if="${adminSuccess != null}"
+         id="adminToast"
+         class="fixed bottom-5 right-5 z-50 bg-zinc-950 text-white px-5 py-3.5 rounded-lg shadow-lg border border-zinc-800 flex items-center gap-3 text-sm transition-opacity duration-300">
+        <i class="fa-solid fa-circle-check text-emerald-400"></i>
+        <span th:text="${adminSuccess}">Thao tác thành công</span>
+    </div>
+
+    <!-- Khung thân: Sidebar trái + Nội dung phải -->
+    <div class="flex-1 flex min-h-0">
+        <aside th:replace="~{Admin/fragments/admin-sidebar :: sidebar('dashboard')}"></aside>
+
+        <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+
+            <!-- Tiêu đề trang + Lối tắt thao tác nhanh -->
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                    <h1 class="text-2xl font-bold tracking-tight text-zinc-950">
+                        Bảng điều khiển quản trị
+                    </h1>
+                    <p class="text-xs text-zinc-500 mt-1">
+                        Theo dõi doanh thu, tình trạng xử lý đơn hàng và hoạt động danh mục thiết bị điện tử.
+                    </p>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-2 text-xs">
+                    <a th:href="@{/admin/orders}"
+                       class="h-9 px-3.5 bg-white border border-zinc-300 hover:border-zinc-950 font-bold uppercase tracking-wider text-zinc-800 inline-flex items-center gap-2 transition-colors">
+                        <i class="fa-solid fa-list-check text-[11px]"></i>
+                        <span>Xử lý đơn hàng</span>
+                    </a>
+                    <a th:href="@{/admin/products}"
+                       class="h-9 px-3.5 bg-white border border-zinc-300 hover:border-zinc-950 font-bold uppercase tracking-wider text-zinc-800 inline-flex items-center gap-2 transition-colors">
+                        <i class="fa-solid fa-boxes-stacked text-[11px]"></i>
+                        <span>Quản lý sản phẩm</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- 1. Hàng 4 thẻ KPI cốt lõi -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                <!-- KPI 1: Doanh thu có dropdown Ngày / Tuần / Tháng / Quý / Năm -->
+                <div id="dashboardRevenueCard"
+     class="bg-white border border-zinc-200 p-4 flex flex-col justify-between"
+     th:attr="data-rev-day=${revenueDay != null ? revenueDay : 18500000L},
+              data-rev-week=${revenueWeek != null ? revenueWeek : 124900000L},
+              data-rev-month=${revenueMonth != null ? revenueMonth : 486200000L},
+              data-rev-quarter=${revenueQuarter != null ? revenueQuarter : 1420500000L},
+              data-rev-year=${revenueYear != null ? revenueYear : 5290000000L}">
+                    <div class="flex items-center justify-between gap-2">
+                        <span id="dashboardRevenueLabel"
+                              class="text-[10px] font-bold uppercase tracking-wider text-blue-600">
+                            Doanh thu · Tháng này
+                        </span>
+                        <select id="dashboardRevenueSelect"
+                                aria-label="Chọn khung thời gian doanh thu"
+                                onchange="updateDashboardRevenue()"
+                                class="h-7 px-2 text-[11px] font-bold bg-zinc-50 border border-zinc-300 focus:border-zinc-950 focus:outline-none text-zinc-800 cursor-pointer">
+                            <option value="DAY">Ngày</option>
+                            <option value="WEEK">Tuần</option>
+                            <option value="MONTH" selected>Tháng</option>
+                            <option value="QUARTER">Quý</option>
+                            <option value="YEAR">Năm</option>
+                        </select>
+                    </div>
+                    <div id="dashboardRevenueValue"
+                         class="text-xl sm:text-2xl font-extrabold text-blue-600 mt-1.5 tabular-nums truncate">
+                        0đ
+                    </div>
+                    <div class="text-[11px] text-emerald-600 font-semibold mt-1">
+                        <i class="fa-solid fa-arrow-trend-up mr-1"></i>
+                        <span>So với kỳ trước: +12.4%</span>
+                    </div>
+                </div>
+
+                <!-- KPI 2: Đơn hàng chờ xử lý -->
+                <div class="bg-white border border-zinc-200 p-4 flex flex-col justify-between">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-amber-600">Đơn chờ xử lý</span>
+                        <i class="fa-solid fa-clock text-xs text-amber-500"></i>
+                    </div>
+                    <div class="text-2xl font-extrabold text-zinc-950 mt-1.5 tabular-nums"
+                         th:text="${pendingOrders != null ? pendingOrders : 6}">6</div>
+                    <a th:href="@{/admin/orders(status='PENDING')}"
+                       class="text-[11px] font-semibold text-zinc-600 hover:text-zinc-950 mt-1 inline-flex items-center gap-1">
+                        <span>Xem danh sách chờ duyệt</span>
+                        <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                    </a>
+                </div>
+
+                <!-- KPI 3: Tổng sản phẩm -->
+                <div class="bg-white border border-zinc-200 p-4 flex flex-col justify-between">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Tổng sản phẩm</span>
+                        <i class="fa-solid fa-laptop text-xs text-zinc-400"></i>
+                    </div>
+                    <div class="text-2xl font-extrabold text-zinc-950 mt-1.5 tabular-nums"
+                         th:text="${totalProducts != null ? totalProducts : 24}">24</div>
+                    <div class="text-[11px] text-zinc-500 mt-1">
+                        Đang hiển thị: <strong class="text-emerald-600 tabular-nums"
+                                               th:text="${activeProducts != null ? activeProducts : 21}">21</strong>
+                        · Đang ẩn: <strong class="text-zinc-700 tabular-nums"
+                                            th:text="${hiddenProducts != null ? hiddenProducts : 3}">3</strong>
+                    </div>
+                </div>
+
+                <!-- KPI 4: Tỷ lệ hoàn tất đơn -->
+                <div class="bg-white border border-zinc-200 p-4 flex flex-col justify-between">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-600">Tỷ lệ hoàn tất</span>
+                        <i class="fa-solid fa-circle-check text-xs text-emerald-500"></i>
+                    </div>
+                    <div class="text-2xl font-extrabold text-zinc-950 mt-1.5 tabular-nums"
+                         th:text="${completionRate != null ? completionRate + '%' : '91.5%'}">91.5%</div>
+                    <div class="text-[11px] text-zinc-500 mt-1">
+                        Tổng đơn ghi nhận: <strong class="text-zinc-800 tabular-nums"
+                                                 th:text="${totalOrders != null ? totalOrders : 47}">47</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Khu vực Biểu đồ doanh thu & Phân bổ trạng thái đơn hàng -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Biểu đồ doanh thu (2 cột) -->
+                <section class="lg:col-span-2 bg-white border border-zinc-200 p-5 flex flex-col justify-between">
+                    <div class="flex flex-wrap items-center justify-between gap-2 pb-4 border-b border-zinc-100">
+                        <div>
+                            <h2 class="text-sm font-bold uppercase tracking-wider text-zinc-950">Biểu đồ doanh thu</h2>
+                            <p class="text-xs text-zinc-500 mt-0.5">Ước tính biến động doanh thu theo từng khung thời gian.</p>
+                        </div>
+                        <div class="flex items-center gap-1 text-[11px] font-bold">
+                            <button type="button"
+                                    data-chart-mode="WEEK"
+                                    onclick="switchRevenueChart('WEEK', this)"
+                                    class="chart-mode-btn h-7 px-2.5 border border-zinc-300 text-zinc-700 hover:border-zinc-950">
+                                Tuần
+                            </button>
+                            <button type="button"
+                                    data-chart-mode="MONTH"
+                                    onclick="switchRevenueChart('MONTH', this)"
+                                    class="chart-mode-btn h-7 px-2.5 border border-zinc-950 bg-zinc-950 text-white">
+                                Tháng
+                            </button>
+                            <button type="button"
+                                    data-chart-mode="QUARTER"
+                                    onclick="switchRevenueChart('QUARTER', this)"
+                                    class="chart-mode-btn h-7 px-2.5 border border-zinc-300 text-zinc-700 hover:border-zinc-950">
+                                Quý
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="h-60 pt-4">
+                        <canvas id="revenueOverviewChart"></canvas>
+                    </div>
+                </section>
+
+                <!-- Phân bổ trạng thái đơn hàng (1 cột) -->
+                <section class="bg-white border border-zinc-200 p-5 flex flex-col justify-between">
+                    <div>
+                        <div class="pb-4 border-b border-zinc-100">
+                            <h2 class="text-sm font-bold uppercase tracking-wider text-zinc-950">Trạng thái đơn hàng</h2>
+                            <p class="text-xs text-zinc-500 mt-0.5">Nhịp xử lý đơn hiện tại trong hệ thống.</p>
+                        </div>
+
+                        <div class="space-y-3.5 pt-4 text-xs">
+                            <div>
+                                <div class="flex justify-between font-semibold mb-1">
+                                    <span class="text-amber-700">Chờ xử lý</span>
+                                    <span class="tabular-nums text-zinc-800">6 đơn</span>
+                                </div>
+                                <div class="w-full h-2 bg-zinc-100 overflow-hidden">
+                                    <div class="h-full bg-amber-500" style="width: 15%"></div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <div class="flex justify-between font-semibold mb-1">
+                                    <span class="text-blue-700">Đã xác nhận</span>
+                                    <span class="tabular-nums text-zinc-800">5 đơn</span>
+                                </div>
+                                <div class="w-full h-2 bg-zinc-100 overflow-hidden">
+                                    <div class="h-full bg-blue-600" style="width: 12%"></div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <div class="flex justify-between font-semibold mb-1">
+                                    <span class="text-indigo-700">Đang giao</span>
+                                    <span class="tabular-nums text-zinc-800">8 đơn</span>
+                                </div>
+                                <div class="w-full h-2 bg-zinc-100 overflow-hidden">
+                                    <div class="h-full bg-indigo-500" style="width: 20%"></div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <div class="flex justify-between font-semibold mb-1">
+                                    <span class="text-emerald-700">Hoàn tất</span>
+                                    <span class="tabular-nums text-zinc-800">25 đơn</span>
+                                </div>
+                                <div class="w-full h-2 bg-zinc-100 overflow-hidden">
+                                    <div class="h-full bg-emerald-500" style="width: 45%"></div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <div class="flex justify-between font-semibold mb-1">
+                                    <span class="text-red-600">Đã hủy</span>
+                                    <span class="tabular-nums text-zinc-800">3 đơn</span>
+                                </div>
+                                <div class="w-full h-2 bg-zinc-100 overflow-hidden">
+                                    <div class="h-full bg-red-500" style="width: 8%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pt-4 mt-4 border-t border-zinc-100 flex items-center justify-between text-xs">
+                        <span class="text-zinc-500">Cần đẩy đơn giao sớm</span>
+                        <a th:href="@{/admin/orders}" class="font-bold text-blue-600 hover:underline">
+                            Quản lý đơn →
+                        </a>
+                    </div>
+                </section>
+            </div>
+
+            <!-- 3. Danh sách "Cần xử lý ngay": Đơn hàng gần đây & Sản phẩm nhanh -->
+            <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
+                <!-- Đơn hàng gần đây (7 cột) -->
+                <section class="xl:col-span-7 bg-white border border-zinc-200 overflow-hidden">
+                    <div class="p-4 sm:px-5 border-b border-zinc-200 flex items-center justify-between">
+                        <div>
+                            <h2 class="text-sm font-bold uppercase tracking-wider text-zinc-950">Đơn hàng gần đây</h2>
+                            <p class="text-xs text-zinc-500 mt-0.5">Các đơn mới đặt cần kiểm tra và cập nhật trạng thái.</p>
+                        </div>
+                        <a th:href="@{/admin/orders}" class="text-xs font-bold text-blue-600 hover:underline">
+                            Tất cả đơn hàng
+                        </a>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead>
+                                <tr class="bg-zinc-50 border-b border-zinc-200 text-[11px] font-bold uppercase tracking-wider text-zinc-600">
+                                    <th class="py-3 px-4">Mã đơn</th>
+                                    <th class="py-3 px-4">Khách hàng</th>
+                                    <th class="py-3 px-4">Tổng tiền</th>
+                                    <th class="py-3 px-4">Trạng thái</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-zinc-100">
+                                <tr th:each="ord : ${recentOrders}" class="hover:bg-zinc-50/80">
+                                    <td class="py-3 px-4 font-mono font-bold text-zinc-900 whitespace-nowrap"
+                                        th:text="${ord.orderCode != null ? ord.orderCode : ('#ORD-' + ord.id)}">#ORD-101</td>
+                                    <td class="py-3 px-4">
+                                        <div class="font-semibold text-zinc-900" th:text="${ord.recipientName}">Nguyễn Văn A</div>
+                                        <div class="text-[11px] text-zinc-500 tabular-nums" th:text="${ord.recipientPhone}">0901234567</div>
+                                    </td>
+                                    <td class="py-3 px-4 font-bold text-blue-600 tabular-nums whitespace-nowrap"
+                                        th:text="${ord.totalAmount != null ? #numbers.formatDecimal(ord.totalAmount, 0, 'POINT', 0, 'COMMA') + 'đ' : '0đ'}">
+                                        24.500.000đ
+                                    </td>
+                                    <td class="py-3 px-4 whitespace-nowrap">
+                                        <span class="inline-block px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-800 rounded"
+                                              th:text="${ord.orderStatus != null ? ord.orderStatus : 'PENDING'}">PENDING</span>
+                                    </td>
+                                </tr>
+
+                                <!-- Dữ liệu mẫu hiển thị khi chưa truyền recentOrders từ controller -->
+                                <th:block th:if="${recentOrders == null or #lists.isEmpty(recentOrders)}">
+                                    <tr class="hover:bg-zinc-50/80">
+                                        <td class="py-3 px-4 font-mono font-bold text-zinc-900 whitespace-nowrap">#ORD-202611-08</td>
+                                        <td class="py-3 px-4">
+                                            <div class="font-semibold text-zinc-900">Trần Minh Khoa</div>
+                                            <div class="text-[11px] text-zinc-500 tabular-nums">0918 452 119</div>
+                                        </td>
+                                        <td class="py-3 px-4 font-bold text-blue-600 tabular-nums whitespace-nowrap">26.990.000đ</td>
+                                        <td class="py-3 px-4 whitespace-nowrap">
+                                            <span class="inline-block px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-800 rounded">Chờ xử lý</span>
+                                        </td>
+                                    </tr>
+                                    <tr class="hover:bg-zinc-50/80">
+                                        <td class="py-3 px-4 font-mono font-bold text-zinc-900 whitespace-nowrap">#ORD-202611-07</td>
+                                        <td class="py-3 px-4">
+                                            <div class="font-semibold text-zinc-900">Lê Thị Thu Hà</div>
+                                            <div class="text-[11px] text-zinc-500 tabular-nums">0983 774 620</div>
+                                        </td>
+                                        <td class="py-3 px-4 font-bold text-blue-600 tabular-nums whitespace-nowrap">18.490.000đ</td>
+                                        <td class="py-3 px-4 whitespace-nowrap">
+                                            <span class="inline-block px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-indigo-100 text-indigo-800 rounded">Đang giao</span>
+                                        </td>
+                                    </tr>
+                                    <tr class="hover:bg-zinc-50/80">
+                                        <td class="py-3 px-4 font-mono font-bold text-zinc-900 whitespace-nowrap">#ORD-202611-06</td>
+                                        <td class="py-3 px-4">
+                                            <div class="font-semibold text-zinc-900">Phạm Quốc Bảo</div>
+                                            <div class="text-[11px] text-zinc-500 tabular-nums">0932 109 884</div>
+                                        </td>
+                                        <td class="py-3 px-4 font-bold text-blue-600 tabular-nums whitespace-nowrap">33.200.000đ</td>
+                                        <td class="py-3 px-4 whitespace-nowrap">
+                                            <span class="inline-block px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-700 rounded">Hoàn tất</span>
+                                        </td>
+                                    </tr>
+                                </th:block>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Sản phẩm nổi bật / mới thêm (5 cột) -->
+                <section class="xl:col-span-5 bg-white border border-zinc-200 overflow-hidden flex flex-col justify-between">
+                    <div>
+                        <div class="p-4 sm:px-5 border-b border-zinc-200 flex items-center justify-between">
+                            <div>
+                                <h2 class="text-sm font-bold uppercase tracking-wider text-zinc-950">Sản phẩm gần đây</h2>
+                                <p class="text-xs text-zinc-500 mt-0.5">Kiểm tra nhanh giá và trạng thái hiển thị.</p>
+                            </div>
+                            <a th:href="@{/admin/products}" class="text-xs font-bold text-blue-600 hover:underline">
+                                Quản lý SP
+                            </a>
+                        </div>
+
+                        <div class="divide-y divide-zinc-100 text-xs">
+                            <div th:each="prod : ${recentProducts}" class="p-4 flex items-center justify-between gap-3 hover:bg-zinc-50/80">
+                                <div class="min-w-0">
+                                    <div class="font-semibold text-zinc-950 truncate" th:text="${prod.productName}">Laptop</div>
+                                    <div class="text-[11px] text-zinc-500 font-mono" th:text="${prod.productCode}">CODE</div>
+                                </div>
+                                <div class="text-right whitespace-nowrap">
+                                    <div class="font-bold text-blue-600 tabular-nums"
+                                         th:text="${prod.basePrice != null ? #numbers.formatDecimal(prod.basePrice, 0, 'POINT', 0, 'COMMA') + 'đ' : '0đ'}">0đ</div>
+                                    <span class="text-[10px] font-bold uppercase"
+                                          th:classappend="${prod.status} ? 'text-emerald-600' : 'text-zinc-500'"
+                                          th:text="${prod.status} ? 'Hiển thị' : 'Đang ẩn'">Hiển thị</span>
+                                </div>
+                            </div>
+
+                            <!-- Dữ liệu mẫu hiển thị khi chưa truyền recentProducts từ controller -->
+                            <th:block th:if="${recentProducts == null or #lists.isEmpty(recentProducts)}">
+                                <div class="p-4 flex items-center justify-between gap-3 hover:bg-zinc-50/80">
+                                    <div class="min-w-0">
+                                        <div class="font-semibold text-zinc-950 truncate">ASUS Vivobook 15 OLED</div>
+                                        <div class="text-[11px] text-zinc-500 font-mono">LP-ASUS-015</div>
+                                    </div>
+                                    <div class="text-right whitespace-nowrap">
+                                        <div class="font-bold text-blue-600 tabular-nums">17.490.000đ</div>
+                                        <span class="text-[10px] font-bold uppercase text-emerald-600">Hiển thị</span>
+                                    </div>
+                                </div>
+                                <div class="p-4 flex items-center justify-between gap-3 hover:bg-zinc-50/80">
+                                    <div class="min-w-0">
+                                        <div class="font-semibold text-zinc-950 truncate">MSI Thin 15 B13UCX</div>
+                                        <div class="text-[11px] text-zinc-500 font-mono">LP-MSI-13U</div>
+                                    </div>
+                                    <div class="text-right whitespace-nowrap">
+                                        <div class="font-bold text-blue-600 tabular-nums">19.990.000đ</div>
+                                        <span class="text-[10px] font-bold uppercase text-emerald-600">Hiển thị</span>
+                                    </div>
+                                </div>
+                                <div class="p-4 flex items-center justify-between gap-3 hover:bg-zinc-50/80">
+                                    <div class="min-w-0">
+                                        <div class="font-semibold text-zinc-950 truncate">Lenovo LOQ 15IAX9</div>
+                                        <div class="text-[11px] text-zinc-500 font-mono">LP-LEN-15X9</div>
+                                    </div>
+                                    <div class="text-right whitespace-nowrap">
+                                        <div class="font-bold text-blue-600 tabular-nums">22.290.000đ</div>
+                                        <span class="text-[10px] font-bold uppercase text-zinc-500">Đang ẩn</span>
+                                    </div>
+                                </div>
+                            </th:block>
+                        </div>
+                    </div>
+
+                    <div class="p-4 bg-zinc-50 border-t border-zinc-200 flex items-center justify-between text-xs">
+                        <span class="text-zinc-500">Cần thêm thiết bị mới?</span>
+                        <a th:href="@{/admin/products/new}" class="font-bold text-zinc-950 hover:text-blue-600">
+                            + Tạo sản phẩm
+                        </a>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const adminToast = document.getElementById('adminToast');
+        if (adminToast) {
+            setTimeout(() => {
+                adminToast.classList.add('opacity-0');
+                setTimeout(() => adminToast.remove(), 300);
+            }, 3000);
+        }
+
+        const DASHBOARD_REVENUE_MAP = {
+            DAY:     { attr: 'data-rev-day',     label: 'Doanh thu · Hôm nay' },
+            WEEK:    { attr: 'data-rev-week',    label: 'Doanh thu · Tuần này' },
+            MONTH:   { attr: 'data-rev-month',   label: 'Doanh thu · Tháng này' },
+            QUARTER: { attr: 'data-rev-quarter', label: 'Doanh thu · Quý này' },
+            YEAR:    { attr: 'data-rev-year',    label: 'Doanh thu · Năm nay' }
+        };
+
+        function formatVnd(value) {
+            const num = Number(value);
+            if (!Number.isFinite(num)) return '0đ';
+            return Math.round(num).toLocaleString('vi-VN') + 'đ';
+        }
+
+        function updateDashboardRevenue() {
+            const selectEl = document.getElementById('dashboardRevenueSelect');
+            const cardEl = document.getElementById('dashboardRevenueCard');
+            const labelEl = document.getElementById('dashboardRevenueLabel');
+            const valueEl = document.getElementById('dashboardRevenueValue');
+            if (!selectEl || !cardEl || !labelEl || !valueEl) return;
+
+            const period = selectEl.value || 'MONTH';
+            const cfg = DASHBOARD_REVENUE_MAP[period] || DASHBOARD_REVENUE_MAP.MONTH;
+            const raw = cardEl.getAttribute(cfg.attr);
+
+            labelEl.textContent = cfg.label;
+            valueEl.textContent = formatVnd(raw);
+        }
+
+        const CHART_DATASETS = {
+            WEEK: {
+                labels: ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'],
+                data: [14200000, 16800000, 15100000, 19400000, 21000000, 20000000, 18500000]
+            },
+            MONTH: {
+                labels: ['Tuần 1', 'Tuần 2', 'Tuần 3', 'Tuần 4'],
+                data: [108500000, 124000000, 118800000, 134900000]
+            },
+            QUARTER: {
+                labels: ['Tháng 1', 'Tháng 2', 'Tháng 3'],
+                data: [435000000, 499300000, 486200000]
+            }
+        };
+
+        let revenueChartInstance = null;
+
+        function initRevenueChart(mode = 'MONTH') {
+            const canvas = document.getElementById('revenueOverviewChart');
+            if (!canvas || typeof Chart === 'undefined') return;
+
+            const dataset = CHART_DATASETS[mode] || CHART_DATASETS.MONTH;
+            if (revenueChartInstance) {
+                revenueChartInstance.destroy();
+            }
+
+            revenueChartInstance = new Chart(canvas.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: dataset.labels,
+                    datasets: [{
+                        label: 'Doanh thu (VNĐ)',
+                        data: dataset.data,
+                        backgroundColor: '#2563eb',
+                        borderRadius: 2,
+                        maxBarThickness: 44
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => formatVnd(ctx.parsed.y)
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: '#f4f4f5' },
+                            ticks: {
+                                font: { size: 11 },
+                                callback: (val) => (val >= 1000000 ? Math.round(val / 1000000) + 'tr' : formatVnd(val))
+                            }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { font: { size: 11 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        function switchRevenueChart(mode, btnEl) {
+            document.querySelectorAll('.chart-mode-btn').forEach((btn) => {
+                btn.className = 'chart-mode-btn h-7 px-2.5 border border-zinc-300 text-zinc-700 hover:border-zinc-950';
+            });
+            if (btnEl) {
+                btnEl.className = 'chart-mode-btn h-7 px-2.5 border border-zinc-950 bg-zinc-950 text-white';
+            }
+            initRevenueChart(mode);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            updateDashboardRevenue();
+            initRevenueChart('MONTH');
+        });
+    </script>
+</body>
+</html>
